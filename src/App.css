@@ -238,6 +238,8 @@
   .admin-chart-card-wide { grid-column: auto; }
 }
 @media (max-width: 520px) {
+  .more-page-section-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .more-page-section-heading .summary-action { margin: 0; }
   .admin-overview-grid { grid-template-columns: 1fr; }
   .admin-quick-links { flex-direction: column; }
   .admin-quick-links .summary-action { width: 100%; text-align: center; }
@@ -248,6 +250,20 @@
 .info-layout, .contact-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; max-width: 860px; }
 .info-layout h2, .contact-layout h2 { margin: 0 0 12px; font-family: Georgia, 'Times New Roman', serif; font-size: 1.8rem; font-weight: 500; }
 .info-layout p, .contact-layout p { color: #60716d; line-height: 1.6; }
+.more-page-intro { max-width: 520px; margin: 22px 0 0; color: #60716d; font-size: 1.08rem; line-height: 1.6; }
+.more-page-section { margin-bottom: 18px; }
+.more-page-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 14px; border-bottom: 1px solid #bccbc5; padding-bottom: 16px; }
+.more-page-section-heading .auth-kicker { margin-bottom: 8px; }
+.more-page-section-heading h2 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 2rem; font-weight: 500; }
+.more-page-section-heading .summary-action { flex-shrink: 0; margin: 0; }
+.more-page-description { max-width: 760px; margin: 0 0 20px; color: #60716d; line-height: 1.6; }
+.comparison-table-wrap { overflow-x: auto; border: 1px solid #d8e0da; background: rgba(255, 253, 248, 0.92); }
+.comparison-table { width: 100%; min-width: 620px; border-collapse: collapse; text-align: left; }
+.comparison-table th, .comparison-table td { padding: 16px 18px; border-bottom: 1px solid #d8e0da; vertical-align: top; }
+.comparison-table th { background: #eef2ed; color: #18312f; font-size: 0.76rem; letter-spacing: 0.07em; text-transform: uppercase; }
+.comparison-table td { color: #60716d; font-size: 0.9rem; line-height: 1.45; }
+.comparison-table td:first-child { color: #18312f; font-weight: 700; }
+.comparison-table tbody tr:last-child td { border-bottom: 0; }
 .about-page .page-heading { padding-bottom: 30px; }
 .about-story { margin-bottom: 36px; }
 .about-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 26px 0 48px; }

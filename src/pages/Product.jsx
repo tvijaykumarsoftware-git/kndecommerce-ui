@@ -8,6 +8,15 @@ import '../App.css';
 const API_URL = 'http://localhost:5107/api';
 const emptyProduct = { name: '', description: '', price: '', stockQuantity: 0, categoryId: '', imageUrl: '' };
 
+const getApiErrorMessage = (requestError, fallback) => {
+  const responseData = requestError.response?.data;
+  if (responseData?.errors) {
+    const validationMessages = Object.values(responseData.errors).flat().filter(Boolean);
+    if (validationMessages.length) return validationMessages.join(' ');
+  }
+  return responseData?.message || responseData?.title || fallback;
+};
+
 const ProductPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -50,14 +59,26 @@ const ProductPage = () => {
   const saveProduct = async (event) => {
     event.preventDefault();
     setError('');
-    try {
-      const payload = {
-        ...form,
-        price: Number(form.price),
-        stockQuantity: Number(form.stockQuantity),
-        categoryId: Number(form.categoryId)
-      };
+    setMessage('');
 
+    const price = Number(form.price);
+    const stockQuantity = Number(form.stockQuantity);
+    const categoryId = Number(form.categoryId);
+    if (!form.name.trim() || !Number.isFinite(price) || price < 0 || !Number.isInteger(stockQuantity) || stockQuantity < 0 || !Number.isInteger(categoryId) || categoryId < 1) {
+      setError('Enter a product name, valid price and stock, and choose a category.');
+      return;
+    }
+
+    const payload = {
+      name: form.name.trim(),
+      description: form.description.trim(),
+      price,
+      stockQuantity,
+      categoryId
+    };
+    if (form.imageUrl.trim()) payload.imageUrl = form.imageUrl.trim();
+
+    try {
       if (editingProductId) {
         await axios.put(`${API_URL}/products/${editingProductId}`, { ...payload, productId: editingProductId }, requestConfig);
       } else {
@@ -67,9 +88,13 @@ const ProductPage = () => {
       setForm(emptyProduct);
       setEditingProductId(null);
       setMessage('Product saved.');
-      await loadData();
+      try {
+        await loadData();
+      } catch {
+        setError('Product saved, but the list could not be refreshed.');
+      }
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Unable to save this product.');
+      setError(getApiErrorMessage(requestError, 'Unable to save this product.'));
     }
   };
 

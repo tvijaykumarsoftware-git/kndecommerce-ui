@@ -3,11 +3,17 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 
 const API_URL = 'http://localhost:5107/api';
+const moreMenuItems = [
+  { label: 'Notification Preferences', to: '/notification-preferences' },
+  { label: '24x7 Customer Care', to: '/customer-care' },
+  { label: 'Advertise', to: '/advertise' }
+];
 
 const UserHeader = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isManageOpen, setIsManageOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('userName') || localStorage.getItem('email') || 'Account');
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('imageUrl'));
@@ -77,6 +83,7 @@ const UserHeader = () => {
   const closeMenu = () => {
     setIsMenuOpen(false);
     setIsManageOpen(false);
+    setIsMoreOpen(false);
   };
 
   return (
@@ -106,6 +113,14 @@ const UserHeader = () => {
         </div> : isSignedIn && <Link to="/orders" onClick={closeMenu}>Orders</Link>}
         <Link to="/about" onClick={closeMenu}>About</Link>
         <Link to="/contact" onClick={closeMenu}>Contact</Link>
+        <div className={`nav-menu${isMoreOpen ? ' is-open' : ''}`}>
+          <button type="button" className="nav-menu-trigger" aria-expanded={isMoreOpen} aria-haspopup="true" onClick={() => setIsMoreOpen((open) => !open)}>
+            More <span aria-hidden="true">&#x25BE;</span>
+          </button>
+          <div className="nav-submenu">
+            {moreMenuItems.map((item) => <Link key={item.label} to={item.to} onClick={closeMenu}>{item.label}</Link>)}
+          </div>
+        </div>
         {isSignedIn && <Link className="cart-nav-link" to="/cart" onClick={closeMenu} aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}>
           <svg className="cart-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H6" /><circle cx="9" cy="20" r="1.2" /><circle cx="18" cy="20" r="1.2" /></svg>
           <span>Cart</span><span className="cart-count" aria-hidden="true">{cartCount > 99 ? '99+' : cartCount}</span>
