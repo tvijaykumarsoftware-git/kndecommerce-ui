@@ -16,9 +16,13 @@ const ProductPage = () => {
   const [editingProductId, setEditingProductId] = useState(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 5;
-  const requestConfig = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
+
+  const getRequestConfig = () => ({
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  });
 
   const loadData = async () => {
     const [productsResponse, categoriesResponse] = await Promise.all([
@@ -47,21 +51,45 @@ const ProductPage = () => {
     setForm((current) => ({ ...current, [target.name]: target.value }));
   };
 
+  const getRequestError = (requestError, fallback) => {
+    const responseData = requestError.response?.data;
+    if (responseData?.errors) {
+      return Object.values(responseData.errors).flat().join(' ');
+    }
+    return responseData?.message || responseData?.title || fallback;
+  };
+
   const saveProduct = async (event) => {
     event.preventDefault();
     setError('');
+    setMessage('');
+
+    const price = Number(form.price);
+    const stockQuantity = Number(form.stockQuantity);
+    const categoryId = Number(form.categoryId);
+    if (!form.name.trim() || !Number.isFinite(price) || price < 0 || !Number.isInteger(stockQuantity) || stockQuantity < 0 || !Number.isInteger(categoryId) || categoryId < 1) {
+      setError('Enter a product name, a valid price, stock quantity, and category.');
+      return;
+    }
+
+    setIsSaving(true);
     try {
       const payload = {
-        ...form,
-        price: Number(form.price),
-        stockQuantity: Number(form.stockQuantity),
-        categoryId: Number(form.categoryId)
+        name: form.name.trim(),
+        description: form.description.trim(),
+        imageUrl: form.imageUrl.trim(),
+        price,
+        stockQuantity,
+        categoryId
       };
 
-      if (editingProductId) {
-        await axios.put(`${API_URL}/products/${editingProductId}`, { ...payload, productId: editingProductId }, requestConfig);
+      if (editingProductId !== null) {
+        await axios.put(`${API_URL}/products/${editingProductId}`, {
+          productId: editingProductId,
+          ...payload
+        }, getRequestConfig());
       } else {
-        await axios.post(`${API_URL}/products`, payload, requestConfig);
+        await axios.post(`${API_URL}/products`, payload, getRequestConfig());
       }
 
       setForm(emptyProduct);
@@ -69,7 +97,13 @@ const ProductPage = () => {
       setMessage('Product saved.');
       await loadData();
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Unable to save this product.');
+      if (requestError.response?.status === 401 || requestError.response?.status === 403) {
+        navigate('/login');
+      } else {
+        setError(getRequestError(requestError, 'Unable to save this product.'));
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -95,7 +129,7 @@ const ProductPage = () => {
 
     setError('');
     try {
-      await axios.delete(`${API_URL}/products/${productId}`, requestConfig);
+      await axios.delete(`${API_URL}/products/${productId}`, getRequestConfig());
       setMessage('Product deleted.');
       await loadData();
     } catch (requestError) {
@@ -133,7 +167,7 @@ const ProductPage = () => {
             ))}
           </select>
           <input name="imageUrl" placeholder="Image URL" value={form.imageUrl} onChange={updateForm} />
-          <button className="summary-action" type="submit">{editingProductId ? 'Update product' : 'Add product'}</button>
+          <button className="summary-action" type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : editingProductId !== null ? 'Update product' : 'Add product'}</button>
           {editingProductId && (
             <button type="button" className="text-button" onClick={cancelEdit}>Cancel</button>
           )}
