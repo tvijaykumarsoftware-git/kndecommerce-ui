@@ -318,20 +318,6 @@
 .order-detail-aside p { margin: 0; line-height: 1.55; }
 .order-detail-aside .summary-action { margin: 0; }
 .order-back-link { display: inline-block; margin-top: 24px; }
-.preference-form { display: grid; gap: 14px; align-content: start; padding: 24px; border: 1px solid #d8e0da; background: rgba(255, 253, 248, 0.88); }
-.preference-form label { display: flex; align-items: flex-start; gap: 10px; color: #18312f; font-size: 0.92rem; line-height: 1.45; }
-.preference-form input { width: 17px; height: 17px; margin: 1px 0 0; accent-color: #18312f; }
-.preference-form .summary-action { width: fit-content; margin: 8px 0 0; }
-.help-list { display: grid; gap: 0; align-content: start; }
-.help-list div { display: grid; gap: 6px; padding: 16px 0; border-bottom: 1px solid #d8e0da; }
-.help-list div:first-child { padding-top: 0; }
-.help-list span { color: #60716d; font-size: 0.9rem; line-height: 1.5; }
-.help-list .summary-action { width: fit-content; margin-top: 22px; }
-.support-strip { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 28px; align-items: center; margin-top: 52px; padding: 28px 32px; border: 1px solid #d8e0da; background: rgba(255, 253, 248, 0.88); }
-.support-strip h2 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 500; }
-.support-strip p:last-child { margin: 0; color: #60716d; line-height: 1.6; }
-.advertise-points { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
-.advertise-points span { padding: 9px 12px; border: 1px solid #cbd8d1; border-radius: 999px; color: #60716d; font-size: 0.78rem; font-weight: 700; }
 
 @media (max-width: 860px) {
   .shop-nav { align-items: flex-start; flex-wrap: wrap; padding-bottom: 16px; }
@@ -369,7 +355,6 @@
   .admin-form, .category-form { grid-template-columns: 1fr; }
   .admin-card, .site-footer { align-items: flex-start; flex-direction: column; }
   .info-layout, .contact-layout { grid-template-columns: 1fr; gap: 34px; }
-  .support-strip { grid-template-columns: 1fr; padding: 22px 20px; }
   .location-section { grid-template-columns: 1fr; }
   .about-gallery { grid-template-columns: 1fr; }
   .about-highlight { grid-template-columns: 1fr; padding: 22px 20px; }

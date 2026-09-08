@@ -15,9 +15,6 @@ import Invoices from './pages/Invoices';
 import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
 import Profile from './pages/Profile';
-import NotificationPreferences from './pages/NotificationPreferences';
-import CustomerCare from './pages/CustomerCare';
-import Advertise from './pages/Advertise';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -38,9 +35,6 @@ function App() {
         <Route path="/register" element={<Registration />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<ContactUs />} />
-        <Route path="/notification-preferences" element={<NotificationPreferences />} />
-        <Route path="/customer-care" element={<CustomerCare />} />
-        <Route path="/advertise" element={<Advertise />} />
         <Route path="/catalog" element={<ProductCatalog />} />
         <Route path="/products" element={<ProtectedRoute allowedRoles={['Admin']}><Product /></ProtectedRoute>} />
         <Route path="/categories" element={<ProtectedRoute allowedRoles={['Admin']}><Category /></ProtectedRoute>} />
