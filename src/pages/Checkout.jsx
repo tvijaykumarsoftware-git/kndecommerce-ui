@@ -43,7 +43,7 @@ const Checkout = () => {
     }
   };
 
-  if (confirmation) return <main className="auth-page confirmation-page"><section className="auth-panel confirmation-panel"><p className="auth-kicker">Order confirmed</p><h1>Thank you for your order.</h1><p className="auth-subtitle">Order #{confirmation.orderId} is being prepared.</p><p>Invoice: <strong>{confirmation.invoiceNumber}</strong></p><Link className="auth-submit summary-action" to="/catalog">Back to catalog</Link></section><SiteFooter /></main>;
+  if (confirmation) return <main className="auth-page confirmation-page"><section className="auth-panel confirmation-panel"><p className="auth-kicker">Order confirmed</p><h1>Thank you for your order.</h1><p className="auth-subtitle">Order #{confirmation.orderId} is being prepared.</p><p>Invoice: <strong>{confirmation.invoiceNumber}</strong></p><Link className="auth-submit summary-action" to="/orders">Back to orders</Link></section><SiteFooter /></main>;
 
   return (
     <main className="shop-page narrow-page checkout-page">

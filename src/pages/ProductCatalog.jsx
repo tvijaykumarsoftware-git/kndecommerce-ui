@@ -40,6 +40,7 @@ const ProductCatalog = () => {
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
+      setError(''); // Resets any leftover error message on load
       try {
         const { data } = await axios.get(`${API_URL}/products`, {
           params: { search: search.trim() || undefined, categoryId: categoryId || undefined }
@@ -129,38 +130,82 @@ const ProductCatalog = () => {
           </select>
         </div>
       </section>
-      <section className="product-grid" aria-label="Product catalog">
-      {message && <p className="shop-message" role="status">{message} <Link to="/cart">View cart</Link></p>}
-      {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
 
-      {!error && !isLoading && products.length > 0 && (
-        <div className="catalog-results-meta" aria-live="polite">
-          <span>Showing {Math.min(startIndex + 1, products.length)}-{Math.min(startIndex + productsPerPage, products.length)} of {products.length} products</span>
-          <span>Page {safeCurrentPage} of {totalPages}</span>
-        </div>
-      )}
-     </section>
       <section className="product-grid" aria-label="Product catalog">
-        
-        {visibleProducts.map((product) => (
-          <article className="product-card" key={product.productId}>
-            <div className="product-image">
-              {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>{product.name.slice(0, 1)}</span>}
-            </div>
-            <div className="product-details">
-              <div>
-                <h2>{product.name}</h2>
-                <p>{product.description || 'Made for daily use.'}</p>
+        {message && <p className="shop-message" role="status">{message} <Link to="/cart">View cart</Link></p>}
+        {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
+
+        {!error && !isLoading && products.length > 0 && (
+          <div className="catalog-results-meta" aria-live="polite">
+            <span>Showing {Math.min(startIndex + 1, products.length)}-{Math.min(startIndex + productsPerPage, products.length)} of {products.length} products</span>
+            <span>Page {safeCurrentPage} of {totalPages}</span>
+          </div>
+        )}
+      </section>
+
+      <section className="product-grid" aria-label="Product catalog">
+        {visibleProducts.map((product) => {
+          const inStock = product.stockQuantity > 0;
+
+          return (
+            <article className="product-card" key={product.productId}>
+              <div className="product-image">
+                {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>{product.name.slice(0, 1)}</span>}
               </div>
-              <div className="product-purchase">
-                <strong>${Number(product.price).toFixed(2)}</strong>
-                <button type="button" disabled={product.stockQuantity < 1 || addingProductId === product.productId} onClick={() => addToCart(product.productId)}>
-                  {product.stockQuantity < 1 ? 'Sold out' : addingProductId === product.productId ? 'Adding...' : 'Add to cart'}
-                </button>
+              <div className="product-details">
+                <div>
+                  <h2>{product.name}</h2>
+                  <p>{product.description || 'Made for daily use.'}</p>
+                </div>
+
+                <div className="product-purchase" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                  <strong>${Number(product.price).toFixed(2)}</strong>
+                  
+                  {/* Matching size controls */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '110px' }}>
+                    <span
+                      style={{
+                        backgroundColor: inStock ? '#10b981' : '#ef4444',
+                        color: '#ffffff',
+                        width: '100%',
+                        height: '34px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      {inStock ? `In Stock: ${product.stockQuantity}` : 'Out of stock'}
+                    </span>
+
+                    <button
+                      type="button"
+                      style={{
+                        width: '100%',
+                        height: '34px',
+                        padding: '0',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        boxSizing: 'border-box'
+                      }}
+                      disabled={!inStock || addingProductId === product.productId}
+                      onClick={() => addToCart(product.productId)}
+                    >
+                      {!inStock ? 'Sold out' : addingProductId === product.productId ? 'Adding...' : 'Add to cart'}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </section>
 
       {!error && totalPages > 1 && (

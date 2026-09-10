@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import UserHeader from '../components/UserHeader';
@@ -8,7 +8,45 @@ import '../App.css';
 const API_URL = 'http://localhost:5107/api';
 const ITEMS_PER_PAGE = 8;
 
-const getStatusClass = (status) => `order-status status-${String(status || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+// Dynamic status color badge configuration
+const getStatusBadgeStyle = (status) => {
+  const normalized = String(status || '').toLowerCase();
+  
+  let backgroundColor = '#f3f4f6'; // Default Light Gray
+  let color = '#374151';
+
+  switch (normalized) {
+    case 'pending':
+      backgroundColor = '#fef3c7'; // Amber / Yellow
+      color = '#92400e';
+      break;
+    case 'processing':
+      backgroundColor = '#e0f2fe'; // Light Blue
+      color = '#075985';
+      break;
+    case 'shipped':
+      backgroundColor = '#e0e7ff'; // Light Indigo
+      color = '#3730a3';
+      break;
+    case 'delivered':
+      backgroundColor = '#dcfce7'; // Soft Green
+      color = '#166534';
+      break;
+    default:
+      break;
+  }
+
+  return {
+    display: 'inline-block',
+    padding: '4px 10px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: '600',
+    backgroundColor,
+    color,
+    textTransform: 'capitalize'
+  };
+};
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -22,18 +60,18 @@ const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedRating, setSelectedRating] = useState(0);
 
-  const fetchOrders = () => {
+  const fetchOrders = useCallback(() => {
     axios.get(`${API_URL}/orders`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       .then(({ data }) => setOrders(data))
       .catch((requestError) => {
         if (requestError.response?.status === 401) navigate('/login');
         else setError(requestError.response?.data?.message || 'Unable to load your orders.');
       });
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchOrders();
-  }, [navigate]);
+  }, [fetchOrders]);
 
   const pageCount = Math.max(1, Math.ceil(orders.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, pageCount);
@@ -125,29 +163,45 @@ const Orders = () => {
       <section className="order-list" aria-label="Order history">
         {visibleOrders.map((order) => {
           const isDelivered = String(order.orderStatus).toLowerCase() === 'delivered';
+          const hasBeenRated = Number(order.rating) > 0;
 
           return (
             <article className="order-card" key={order.orderId}>
               <div>
                 <strong>Order #{order.orderId}</strong>
-                <span>{new Date(order.createdAt).toLocaleDateString()} · {(order.orderItems || []).length} item{(order.orderItems || []).length === 1 ? '' : 's'}</span>
-                <span className={getStatusClass(order.orderStatus)}>{order.orderStatus} · ${Number(order.totalAmount).toFixed(2)}</span>
-                {order.rating > 0 && (
-                  <span style={{ color: '#ffc107', marginTop: '4px', display: 'block', fontWeight: 'bold' }}>
+                <span style={{ display: 'block', margin: '3px 0', fontSize: '14px', color: '#666' }}>
+                  {new Date(order.createdAt).toLocaleDateString()} · {(order.orderItems || []).length} item{(order.orderItems || []).length === 1 ? '' : 's'}
+                </span>
+                
+                {/* Status Badge & Price Display */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                  <span style={getStatusBadgeStyle(order.orderStatus)}>
+                    {order.orderStatus}
+                  </span>
+                  <span style={{ fontWeight: '500' }}>· ${Number(order.totalAmount).toFixed(2)}</span>
+                </div>
+
+                {/* Rated Star Display */}
+                {hasBeenRated && (
+                  <span style={{ color: '#ffc107', marginTop: '6px', display: 'block', fontWeight: 'bold' }}>
                     Rating: {'★'.repeat(order.rating)}{'☆'.repeat(5 - order.rating)}
                   </span>
                 )}
               </div>
 
+              {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 {!isDelivered ? (
                   <button type="button" className="summary-action" onClick={() => openStatusModal(order)}>
                     Status
                   </button>
                 ) : (
-                  <button type="button" className="summary-action" onClick={() => openRatingModal(order)}>
-                    {order.rating ? 'Update Rating' : 'Rate Us'}
-                  </button>
+                  /* Hide rating button if the order is already rated */
+                  !hasBeenRated && (
+                    <button type="button" className="summary-action" onClick={() => openRatingModal(order)}>
+                      Rate Us
+                    </button>
+                  )
                 )}
                 <Link className="summary-action" to={`/orders/${order.orderId}`}>View details</Link>
               </div>
@@ -226,7 +280,7 @@ const Orders = () => {
   );
 };
 
-// Styling definitions
+// Inline Styles for Modal Overlays
 const modalOverlayStyle = {
   position: 'fixed',
   top: 0,
