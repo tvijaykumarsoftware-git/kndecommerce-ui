@@ -16,6 +16,8 @@ import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
 import Profile from './pages/Profile';
 import MorePage from './pages/MorePages';
+import Payment from './pages/Payment';
+
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -61,7 +63,7 @@ function App() {
         <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        
+        <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
         {/* Protected Admin Routes */}
         <Route 
           path="/admin/dashboard" 

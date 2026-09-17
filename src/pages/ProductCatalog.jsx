@@ -151,6 +151,30 @@ const ProductCatalog = () => {
     return String(specs).trim().length > 0;
   };
 
+  // Helper function to extract price fields reliably regardless of API casing
+  const getProductPricing = (product) => {
+    const rawPrice = Number(product.price || 0);
+    const rawDiscount = 
+      product.discountOnMRP ?? 
+      product.discountOnMrp ?? 
+      product.discountOnMrpPrice ?? 
+      product.discountedPrice ?? 
+      product.discountPrice ?? 
+      null;
+
+    const discountVal = rawDiscount !== null && rawDiscount !== undefined ? Number(rawDiscount) : null;
+    
+    // Determine if discount is active and valid
+    const hasDiscount = discountVal !== null && !isNaN(discountVal) && discountVal > 0 && discountVal < rawPrice;
+    
+    const discountedPrice = hasDiscount ? discountVal : rawPrice;
+    const mrp = rawPrice;
+    const savings = mrp - discountedPrice;
+    const discountPercent = hasDiscount ? Math.round((savings / mrp) * 100) : 0;
+
+    return { mrp, discountedPrice, savings, discountPercent, hasDiscount };
+  };
+
   return (
     <main className="shop-page catalog-page">
       <UserHeader />
@@ -199,6 +223,7 @@ const ProductCatalog = () => {
         {visibleProducts.map((product) => {
           const inStock = product.stockQuantity > 0;
           const isZoomed = zoomedCardId === product.productId;
+          const { mrp, discountedPrice, savings, discountPercent, hasDiscount } = getProductPricing(product);
 
           return (
             <article className="product-card" key={product.productId}>
@@ -266,48 +291,70 @@ const ProductCatalog = () => {
                   <p>{product.description || 'Made for daily use.'}</p>
                 </div>
 
-                <div className="product-purchase" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                  <strong>${Number(product.price).toFixed(2)}</strong>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '110px' }}>
-                    <span
-                      style={{
-                        backgroundColor: inStock ? '#10b981' : '#ef4444',
-                        color: '#ffffff',
-                        width: '100%',
-                        height: '34px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        textAlign: 'center',
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      {inStock ? `In Stock: ${product.stockQuantity}` : 'Out of stock'}
+                <div style={{ marginTop: '12px' }}>
+                  {/* Flipkart Style Price Display */}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '18px', fontWeight: '700', color: '#212121', fontFamily: 'Roboto, Arial, sans-serif' }}>
+                      ₹{discountedPrice.toLocaleString('en-IN')}
                     </span>
 
-                    <button
-                      type="button"
-                      style={{
-                        width: '100%',
-                        height: '34px',
-                        padding: '0',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        boxSizing: 'border-box'
-                      }}
-                      disabled={!inStock || addingProductId === product.productId}
-                      onClick={() => addToCart(product.productId)}
-                    >
-                      {!inStock ? 'Sold out' : addingProductId === product.productId ? 'Adding...' : 'Add to cart'}
-                    </button>
+                    {hasDiscount && (
+                      <span style={{ fontSize: '14px', color: '#878787', textDecoration: 'line-through', fontFamily: 'Roboto, Arial, sans-serif' }}>
+                        ₹{mrp.toLocaleString('en-IN')}
+                      </span>
+                    )}
+
+                    {hasDiscount && discountPercent > 0 && (
+                      <span style={{ fontSize: '13px', fontWeight: '700', color: '#388e3c', fontFamily: 'Roboto, Arial, sans-serif' }}>
+                        {discountPercent}% off
+                      </span>
+                    )}
                   </div>
+
+                  {/* Flipkart Style Green Savings Tag */}
+                  {hasDiscount && savings > 0 && (
+                    <div style={{ marginTop: '4px' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        backgroundColor: '#e6f4ea',
+                        color: '#137333',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        padding: '2px 6px',
+                        borderRadius: '3px'
+                      }}>
+                        Save ₹{savings.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="product-purchase" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                  <span
+                    style={{
+                      backgroundColor: inStock ? '#10b981' : '#ef4444',
+                      color: '#ffffff',
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {inStock ? `Stock: ${product.stockQuantity}` : 'Out of stock'}
+                  </span>
+
+                  <button
+                    type="button"
+                    style={{
+                      padding: '6px 16px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}
+                    disabled={!inStock || addingProductId === product.productId}
+                    onClick={() => addToCart(product.productId)}
+                  >
+                    {!inStock ? 'Sold out' : addingProductId === product.productId ? 'Adding...' : 'Add to cart'}
+                  </button>
                 </div>
               </div>
             </article>
@@ -346,166 +393,191 @@ const ProductCatalog = () => {
       {!error && !isLoading && products.length === 0 && <p className="empty-state">No products match your search.</p>}
 
       {/* Product Detail Modal */}
-      {selectedProduct && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-          onClick={closeModal}
-        >
+      {selectedProduct && (() => {
+        const { mrp: modalMrp, discountedPrice: modalDiscountedPrice, discountPercent: modalDiscountPercent, hasDiscount: modalHasDiscount } = getProductPricing(selectedProduct);
+
+        return (
           <div 
             style={{
-              backgroundColor: '#ffffff',
-              padding: '28px',
-              borderRadius: '12px',
-              maxWidth: '780px',
-              width: '90%',
-              maxHeight: '85vh',
-              overflowY: 'auto',
-              position: 'relative',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={closeModal}
           >
-            <button 
-              type="button" 
-              onClick={closeModal} 
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#6b7280' }}
+            <div 
+              style={{
+                backgroundColor: '#ffffff',
+                padding: '28px',
+                borderRadius: '12px',
+                maxWidth: '780px',
+                width: '90%',
+                maxHeight: '85vh',
+                overflowY: 'auto',
+                position: 'relative',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              ✕
-            </button>
-
-            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-              {/* Modal Image Box */}
-              <div 
-                style={{ 
-                  flex: '1 1 300px', 
-                  position: 'relative', 
-                  overflow: 'hidden', 
-                  height: '320px', 
-                  backgroundColor: '#f9fafb', 
-                  borderRadius: '8px' 
-                }}
-                onMouseMove={isModalZoomed ? handleMouseMove : undefined}
+              <button 
+                type="button" 
+                onClick={closeModal} 
+                style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#6b7280' }}
               >
-                {selectedProduct.imageUrl ? (
-                  <img 
-                    src={selectedProduct.imageUrl} 
-                    alt={selectedProduct.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                      transform: isModalZoomed ? 'scale(2.2)' : 'scale(1)',
-                      transition: isModalZoomed ? 'transform 0.05s linear' : 'transform 0.25s ease'
-                    }}
-                  />
-                ) : (
-                  <span>{selectedProduct.name}</span>
-                )}
-                
-                <button
-                  type="button"
-                  onClick={() => setIsModalZoomed(!isModalZoomed)}
-                  style={{
-                    position: 'absolute',
-                    bottom: '12px',
-                    right: '12px',
-                    background: '#ffffff',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  {isModalZoomed ? 'Zoom Out -' : 'Zoom In +'}
-                </button>
-              </div>
+                ✕
+              </button>
 
-              {/* Modal Details */}
-              <div style={{ flex: '1 1 300px' }}>
-                <h3 
+              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                {/* Modal Image Box */}
+                <div 
                   style={{ 
-                    fontSize: '16px', 
-                    margin: '0 0 16px 0', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    color: '#374151',
-                    borderBottom: '2px solid #e5e7eb',
-                    paddingBottom: '6px'
+                    flex: '1 1 300px', 
+                    position: 'relative', 
+                    overflow: 'hidden', 
+                    height: '320px', 
+                    backgroundColor: '#f9fafb', 
+                    borderRadius: '8px' 
                   }}
+                  onMouseMove={isModalZoomed ? handleMouseMove : undefined}
                 >
-                  Specifications
-                </h3>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
-                    <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Product:</span>
-                    <span style={{ fontWeight: '700', color: '#111827', fontSize: '15px' }}>{selectedProduct.name}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
-                    <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Price:</span>
-                    <span style={{ fontWeight: '700', color: '#059669', fontSize: '16px' }}>${Number(selectedProduct.price).toFixed(2)}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
-                    <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px', minWidth: '80px' }}>Model:</span>
-                    <span style={{ fontWeight: '500', color: '#374151', fontSize: '14px', textAlign: 'right' }}>
-                      {selectedProduct.description || selectedProduct.name}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px' }}>
-                    <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Stock:</span>
-                    <span
+                  {selectedProduct.imageUrl ? (
+                    <img 
+                      src={selectedProduct.imageUrl} 
+                      alt={selectedProduct.name}
                       style={{
-                        backgroundColor: selectedProduct.stockQuantity > 0 ? '#10b981' : '#ef4444',
-                        color: '#ffffff',
-                        padding: '4px 10px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '600'
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                        transform: isModalZoomed ? 'scale(2.2)' : 'scale(1)',
+                        transition: isModalZoomed ? 'transform 0.05s linear' : 'transform 0.25s ease'
                       }}
-                    >
-                      {selectedProduct.stockQuantity > 0 ? `In Stock: ${selectedProduct.stockQuantity}` : 'Out of Stock'}
-                    </span>
-                  </div>
-
-                  {hasSpecifications(selectedProduct.specifications) && (
-                    <div style={{ marginTop: '12px', background: '#f9fafb', padding: '12px', borderRadius: '6px', fontSize: '13px' }}>
-                      {typeof selectedProduct.specifications === 'object' ? (
-                        <ul style={{ paddingLeft: '16px', margin: 0 }}>
-                          {Object.entries(selectedProduct.specifications).map(([key, val]) => (
-                            <li key={key} style={{ marginBottom: '4px' }}>
-                              <strong>{key}:</strong> {val}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p style={{ margin: 0, color: '#4b5563' }}>{selectedProduct.specifications}</p>
-                      )}
-                    </div>
+                    />
+                  ) : (
+                    <span>{selectedProduct.name}</span>
                   )}
+                  
+                  <button
+                    type="button"
+                    onClick={() => setIsModalZoomed(!isModalZoomed)}
+                    style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      right: '12px',
+                      background: '#ffffff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {isModalZoomed ? 'Zoom Out -' : 'Zoom In +'}
+                  </button>
+                </div>
+
+                {/* Modal Details */}
+                <div style={{ flex: '1 1 300px' }}>
+                  <h3 
+                    style={{ 
+                      fontSize: '16px', 
+                      margin: '0 0 16px 0', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.05em', 
+                      color: '#374151',
+                      borderBottom: '2px solid #e5e7eb',
+                      paddingBottom: '6px'
+                    }}
+                  >
+                    Specifications
+                  </h3>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+                      <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Product:</span>
+                      <span style={{ fontWeight: '700', color: '#111827', fontSize: '15px' }}>{selectedProduct.name}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+                      <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Price:</span>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: '700', color: '#212121', fontSize: '18px' }}>
+                          ₹{modalDiscountedPrice.toLocaleString('en-IN')}
+                        </span>
+                        {modalHasDiscount && (
+                          <span style={{ textDecoration: 'line-through', color: '#878787', fontSize: '14px' }}>
+                            ₹{modalMrp.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                        {modalHasDiscount && modalDiscountPercent > 0 && (
+                          <span style={{ color: '#388e3c', fontSize: '13px', fontWeight: '700' }}>
+                            {modalDiscountPercent}% off
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedProduct.platformFee && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Platform Fee:</span>
+                        <span style={{ fontWeight: '600', color: '#374151', fontSize: '14px' }}>₹{Number(selectedProduct.platformFee).toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+                      <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px', minWidth: '80px' }}>Model:</span>
+                      <span style={{ fontWeight: '500', color: '#374151', fontSize: '14px', textAlign: 'right' }}>
+                        {selectedProduct.description || selectedProduct.name}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px' }}>
+                      <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Stock:</span>
+                      <span
+                        style={{
+                          backgroundColor: selectedProduct.stockQuantity > 0 ? '#10b981' : '#ef4444',
+                          color: '#ffffff',
+                          padding: '4px 10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {selectedProduct.stockQuantity > 0 ? `In Stock: ${selectedProduct.stockQuantity}` : 'Out of Stock'}
+                      </span>
+                    </div>
+
+                    {hasSpecifications(selectedProduct.specifications) && (
+                      <div style={{ marginTop: '12px', background: '#f9fafb', padding: '12px', borderRadius: '6px', fontSize: '13px' }}>
+                        {typeof selectedProduct.specifications === 'object' ? (
+                          <ul style={{ paddingLeft: '16px', margin: 0 }}>
+                            {Object.entries(selectedProduct.specifications).map(([key, val]) => (
+                              <li key={key} style={{ marginBottom: '4px' }}>
+                                <strong>{key}:</strong> {val}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p style={{ margin: 0, color: '#4b5563' }}>{selectedProduct.specifications}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <SiteFooter />
     </main>

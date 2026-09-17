@@ -62,7 +62,7 @@ const Cart = () => {
               <button className="remove-button" type="button" disabled={removingId === item.cartItemId} onClick={() => removeItem(item.cartItemId)}>{removingId === item.cartItemId ? 'Removing...' : 'Remove'}</button>
             </article>)}
           </section>
-          <section className="cart-summary"><span>Total</span><strong>${total.toFixed(2)}</strong><Link className="auth-submit summary-action" to="/checkout">Checkout</Link></section>
+          <section className="cart-summary"><span>Total</span><strong>${total.toFixed(2)}</strong><Link className="auth-submit summary-action" to="/payment">Checkout</Link></section>
         </>
       )}
       <SiteFooter />

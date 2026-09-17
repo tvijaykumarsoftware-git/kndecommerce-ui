@@ -6,7 +6,16 @@ import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
 const API_URL = 'http://localhost:5107/api';
-const emptyProduct = { name: '', description: '', price: '', stockQuantity: 0, categoryId: '', imageUrl: '' };
+const emptyProduct = { 
+  name: '', 
+  description: '', 
+  price: '', 
+  discountOnMRP: '', 
+  platformFee: '', 
+  stockQuantity: 0, 
+  categoryId: '', 
+  imageUrl: '' 
+};
 
 const getApiErrorMessage = (requestError, fallback) => {
   const responseData = requestError.response?.data;
@@ -64,6 +73,7 @@ const ProductPage = () => {
     const price = Number(form.price);
     const stockQuantity = Number(form.stockQuantity);
     const categoryId = Number(form.categoryId);
+
     if (!form.name.trim() || !Number.isFinite(price) || price < 0 || !Number.isInteger(stockQuantity) || stockQuantity < 0 || !Number.isInteger(categoryId) || categoryId < 1) {
       setError('Enter a product name, valid price and stock, and choose a category.');
       return;
@@ -74,8 +84,11 @@ const ProductPage = () => {
       description: form.description.trim(),
       price,
       stockQuantity,
-      categoryId
+      categoryId,
+      discountOnMRP: form.discountOnMRP !== '' ? Number(form.discountOnMRP) : null,
+      platformFee: form.platformFee !== '' ? Number(form.platformFee) : null
     };
+
     if (form.imageUrl.trim()) payload.imageUrl = form.imageUrl.trim();
 
     try {
@@ -103,6 +116,8 @@ const ProductPage = () => {
       name: product.name,
       description: product.description || '',
       price: product.price,
+      discountOnMRP: product.discountOnMRP ?? '',
+      platformFee: product.platformFee ?? '',
       stockQuantity: product.stockQuantity,
       categoryId: product.categoryId,
       imageUrl: product.imageUrl || ''
@@ -146,30 +161,60 @@ const ProductPage = () => {
           <span>{products.length} items</span>
         </div>
 
-        <form className="admin-form" onSubmit={saveProduct}>
-          <input name="name" placeholder="Product name" value={form.name} onChange={updateForm} required />
-          <input name="description" placeholder="Description" value={form.description} onChange={updateForm} />
-          <input name="price" type="number" min="0" step="0.01" placeholder="Price" value={form.price} onChange={updateForm} required />
-          <input name="stockQuantity" type="number" min="0" placeholder="Stock" value={form.stockQuantity} onChange={updateForm} required />
-          <select name="categoryId" value={form.categoryId} onChange={updateForm} required>
-            <option value="">Category</option>
-            {categories.filter((category) => category.isActive).map((category) => (
-              <option key={category.categoryId} value={category.categoryId}>{category.name}</option>
-            ))}
-          </select>
-          <input name="imageUrl" placeholder="Image URL" value={form.imageUrl} onChange={updateForm} />
-          <button className="summary-action" type="submit">{editingProductId ? 'Update product' : 'Add product'}</button>
-          {editingProductId && (
-            <button type="button" className="text-button" onClick={cancelEdit}>Cancel</button>
-          )}
-        </form>
+        {/* Form aligned in single horizontal line with overflow-x auto fallback for smaller screens */}
+        <div style={{ overflowX: 'auto', paddingBottom: '8px' }}>
+          <form 
+            className="admin-form" 
+            onSubmit={saveProduct}
+            style={{ 
+              display: 'flex', 
+              flexWrap: 'nowrap', 
+              gap: '8px', 
+              alignItems: 'center', 
+              minWidth: '1000px' 
+            }}
+          >
+            <input style={{ flex: '1.2' }} name="name" placeholder="Product name" value={form.name} onChange={updateForm} required />
+            <input style={{ flex: '1.2' }} name="description" placeholder="Description" value={form.description} onChange={updateForm} />
+            <input style={{ flex: '0.8' }} name="price" type="number" min="0" step="0.01" placeholder="MRP Price" value={form.price} onChange={updateForm} required />
+            <input style={{ flex: '0.8' }} name="discountOnMRP" type="number" min="0" step="0.01" placeholder="Discount Price" value={form.discountOnMRP} onChange={updateForm} />
+            <input style={{ flex: '0.8' }} name="platformFee" type="number" min="0" step="0.01" placeholder="Platform Fee" value={form.platformFee} onChange={updateForm} />
+            <input style={{ flex: '0.6' }} name="stockQuantity" type="number" min="0" placeholder="Stock" value={form.stockQuantity} onChange={updateForm} required />
+            <select style={{ flex: '1' }} name="categoryId" value={form.categoryId} onChange={updateForm} required>
+              <option value="">Category</option>
+              {categories.filter((category) => category.isActive).map((category) => (
+                <option key={category.categoryId} value={category.categoryId}>{category.name}</option>
+              ))}
+            </select>
+            <input style={{ flex: '1' }} name="imageUrl" placeholder="Image URL" value={form.imageUrl} onChange={updateForm} />
+            
+            <button className="summary-action" type="submit" style={{ flex: 'none', whitespace: 'nowrap' }}>
+              {editingProductId ? 'Update' : 'Add product'}
+            </button>
+            {editingProductId && (
+              <button type="button" className="text-button" onClick={cancelEdit} style={{ flex: 'none' }}>Cancel</button>
+            )}
+          </form>
+        </div>
 
         <div className="admin-grid">
           {visibleProducts.map((product) => (
             <article className="admin-card" key={product.productId}>
               <div>
                 <strong>{product.name}</strong>
-                <span>{product.categoryName || 'Uncategorized'} · ${Number(product.price).toFixed(2)} · {product.stockQuantity} in stock</span>
+                <span>
+                  {product.categoryName || 'Uncategorized'} · 
+                  {product.discountOnMRP ? (
+                    <>
+                      <span style={{ textDecoration: 'line-through', color: '#878787', marginRight: '4px' }}>₹{Number(product.price).toFixed(2)}</span>
+                      <strong style={{ color: '#212121', marginRight: '4px' }}>₹{Number(product.discountOnMRP).toFixed(2)}</strong>
+                    </>
+                  ) : (
+                    ` ₹${Number(product.price).toFixed(2)} `
+                  )}
+                  {product.platformFee ? `(Fee: ₹${Number(product.platformFee).toFixed(2)}) ` : ''}
+                  · {product.stockQuantity} in stock
+                </span>
               </div>
               <div className="admin-actions">
                 <button type="button" onClick={() => editProduct(product)}>Edit</button>
