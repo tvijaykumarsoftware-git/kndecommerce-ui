@@ -21,7 +21,12 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      const { data } = await axios.post(`${API_URL}/login`, form);
+      const { data } = await axios.post(`${API_URL}/login`, {
+        email: form.email.trim(),
+        password: form.password
+      });
+      if (!data?.token) throw new Error('The login response did not include a token.');
+
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.userName);
       localStorage.setItem('email', data.email);
@@ -29,9 +34,27 @@ const Login = () => {
       else localStorage.removeItem('imageUrl');
       localStorage.setItem('role', data.role);
       localStorage.setItem('tokenExpiration', data.expiration);
+
+      // Create a unique session identity for this tab session
+      const currentTabSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      sessionStorage.setItem('tabSessionId', currentTabSessionId);
+
+      // Notify other active tabs via BroadcastChannel
+      if ('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('active_sessions_channel');
+        channel.postMessage({ type: 'USER_LOGGED_IN', email: data.email, sessionId: currentTabSessionId });
+        channel.close();
+      }
+
       navigate(data.role === 'Admin' ? '/admin/dashboard' : '/catalog');
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Unable to sign in. Please check your details.');
+      const responseData = requestError.response?.data;
+      const serverMessage = typeof responseData === 'string'
+        ? responseData
+        : responseData?.message || responseData?.error || responseData?.title;
+      setError(serverMessage || (requestError.request
+        ? 'Unable to reach the sign-in service. Please check that the API is running.'
+        : requestError.message) || 'Unable to sign in. Please check your details.');
     } finally {
       setIsSubmitting(false);
     }

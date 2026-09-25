@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -26,8 +26,57 @@ const UserHeader = () => {
   const initials = userName.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
   const [imageFailed, setImageFailed] = useState(false);
 
+  // Frontend Active Unique Session Management State
+  const activeSessionsRef = useRef(new Map());
+  const [uniqueUserCount, setUniqueUserCount] = useState(1);
+
   useEffect(() => {
     if (!isSignedIn) return undefined;
+
+    // Ensure session ID exists for current tab
+    let currentSessionId = sessionStorage.getItem('tabSessionId');
+    if (!currentSessionId) {
+      currentSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      sessionStorage.setItem('tabSessionId', currentSessionId);
+    }
+
+    const currentEmail = localStorage.getItem('email');
+    if (currentEmail) {
+      activeSessionsRef.current.set(currentSessionId, currentEmail);
+      recalculateUniqueUsers();
+    }
+
+    // Set up BroadcastChannel to ping and synchronize active sessions across tabs
+    let channel;
+    if ('BroadcastChannel' in window) {
+      channel = new BroadcastChannel('active_sessions_channel');
+
+      channel.onmessage = (event) => {
+        const { type, email, sessionId } = event.data || {};
+
+        if (type === 'PING_DISCOVERY') {
+          // Respond to discovery request from new tab
+          const tabId = sessionStorage.getItem('tabSessionId');
+          const tabEmail = localStorage.getItem('email');
+          if (tabId && tabEmail) {
+            channel.postMessage({ type: 'PONG_DISCOVERY', email: tabEmail, sessionId: tabId });
+          }
+        } else if (type === 'PONG_DISCOVERY' || type === 'USER_LOGGED_IN') {
+          if (sessionId && email) {
+            activeSessionsRef.current.set(sessionId, email);
+            recalculateUniqueUsers();
+          }
+        } else if (type === 'USER_LOGGED_OUT') {
+          if (sessionId) {
+            activeSessionsRef.current.delete(sessionId);
+            recalculateUniqueUsers();
+          }
+        }
+      };
+
+      // Broadcast discovery ping to find other active sessions
+      channel.postMessage({ type: 'PING_DISCOVERY' });
+    }
 
     const loadProfile = async () => {
       try {
@@ -60,8 +109,18 @@ const UserHeader = () => {
     loadProfile();
     loadCartCount();
     window.addEventListener('cartUpdated', loadCartCount);
-    return () => window.removeEventListener('cartUpdated', loadCartCount);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener('cartUpdated', loadCartCount);
+    };
   }, [isSignedIn]);
+
+  const recalculateUniqueUsers = () => {
+    // Collect all active unique emails to deduplicate logins by same user
+    const uniqueEmails = new Set(Array.from(activeSessionsRef.current.values()));
+    setUniqueUserCount(Math.max(1, uniqueEmails.size));
+  };
 
   useEffect(() => {
     const refreshProfile = () => {
@@ -76,6 +135,15 @@ const UserHeader = () => {
 
   const signOut = () => {
     closeMenu();
+    const currentSessionId = sessionStorage.getItem('tabSessionId');
+
+    if ('BroadcastChannel' in window && currentSessionId) {
+      const channel = new BroadcastChannel('active_sessions_channel');
+      channel.postMessage({ type: 'USER_LOGGED_OUT', sessionId: currentSessionId });
+      channel.close();
+    }
+
+    sessionStorage.removeItem('tabSessionId');
     localStorage.clear();
     navigate('/login');
   };
@@ -127,9 +195,42 @@ const UserHeader = () => {
         </Link>}
         {isSignedIn ? <>
           <span className="user-profile" title={`${userName} - ${userRole}`}>
-            <Link className="user-avatar-link" to="/profile" onClick={closeMenu} aria-label="Edit profile"><span className="user-avatar">{imageSource && !imageFailed ? <img src={imageSource} alt="" onError={() => setImageFailed(true)} /> : initials}</span></Link>
+            <Link className="user-avatar-link" to="/profile" onClick={closeMenu} aria-label="Edit profile">
+              <span className="user-avatar">{imageSource && !imageFailed ? <img src={imageSource} alt="" onError={() => setImageFailed(true)} /> : initials}</span>
+            </Link>
             <span><strong>{userName}</strong><small>{userRole}</small></span>
           </span>
+
+          {/* Active Logged Users Count Tag (Placed between Profile and Sign out) */}
+          <span 
+            className="active-users-tag" 
+            title={`${uniqueUserCount} active logged in user(s)`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#e0e7ff',
+              color: '#1e40af',
+              fontSize: '12px',
+              fontWeight: '600',
+              padding: '4px 10px',
+              borderRadius: '16px',
+              border: '1px solid #c7d2fe',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span 
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: '#10b981',
+                display: 'inline-block'
+              }} 
+            />
+            {uniqueUserCount} Active
+          </span>
+
           <button className="sign-out-button" type="button" onClick={signOut}>Sign out</button>
         </> : <Link className="nav-cta" to="/login" onClick={closeMenu}>Sign in</Link>}
       </nav>
