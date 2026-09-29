@@ -17,17 +17,7 @@ import OrderDetails from './pages/OrderDetails';
 import Profile from './pages/Profile';
 import MorePage from './pages/MorePages';
 import Payment from './pages/Payment';
-
-
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
-
-  if (!token) return <Navigate to="/login" />;
-  if (allowedRoles && !allowedRoles.includes(role)) return <Navigate to="/unauthorized" />;
-  
-  return children;
-};
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -42,39 +32,21 @@ function App() {
         <Route path="/customer-care" element={<MorePage type="support" />} />
         <Route path="/advertise" element={<MorePage type="advertise" />} />
         <Route path="/catalog" element={<ProductCatalog />} />
+        
+        {/* Protected Admin Routes */}
         <Route path="/products" element={<ProtectedRoute allowedRoles={['Admin']}><Product /></ProtectedRoute>} />
         <Route path="/categories" element={<ProtectedRoute allowedRoles={['Admin']}><Category /></ProtectedRoute>} />
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <Checkout />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
-        {/* Protected Admin Routes */}
-        <Route 
-          path="/admin/dashboard" 
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
-        />
+        <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['Admin']}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/transactions" element={<ProtectedRoute allowedRoles={['Admin']}><Transactions /></ProtectedRoute>} />
         <Route path="/admin/invoices" element={<ProtectedRoute allowedRoles={['Admin']}><Invoices /></ProtectedRoute>} />
+        
+        <Route path="*" element={<Navigate to="/catalog" replace />} />
       </Routes>
     </Router>
   );
