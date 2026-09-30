@@ -20,7 +20,7 @@ const Profile = () => {
     axios.get(`${API_URL}/profile`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       .then(({ data }) => {
         setForm({ ...emptyProfile, ...data });
-        if (data.imageUrl) setImagePreview(data.imageUrl.startsWith('http') ? data.imageUrl : `http://localhost:5107${data.imageUrl}`);
+        if (data.imageUrl) setImagePreview(data.imageUrl.startsWith('http') ? data.imageUrl : `https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net${data.imageUrl}`);
       })
       .catch((requestError) => {
         if (requestError.response?.status === 401) navigate('/login');
