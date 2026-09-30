@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:5107/api';
+const API_URL = 'https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net/api';
 const moreMenuItems = [
   { label: 'Notification Preferences', to: '/notification-preferences' },
   { label: '24x7 Customer Care', to: '/customer-care' },
