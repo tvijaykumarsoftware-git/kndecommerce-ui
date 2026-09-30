@@ -5,7 +5,7 @@ import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'http://localhost:5107/api';
+const API_URL = 'https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net/api';
 const TRACKING_STEPS = ['Pending', 'Processing', 'Shipped', 'Delivered'];
 
 const getStatusClass = (status) => `order-status status-${String(status || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
