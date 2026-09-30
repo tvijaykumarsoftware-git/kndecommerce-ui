@@ -2,6 +2,7 @@
   "name": "kndecommerce-ui",
   "version": "0.1.0",
   "private": true,
+  "proxy": "https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
