@@ -18,6 +18,8 @@ import Profile from './pages/Profile';
 import MorePage from './pages/MorePages';
 import Payment from './pages/Payment';
 import ProtectedRoute from './components/ProtectedRoute';
+import HelpAssistant from './components/HelpAssistant';
+import './App.css';
 
 function App() {
   return (
@@ -48,6 +50,7 @@ function App() {
         
         <Route path="*" element={<Navigate to="/catalog" replace />} />
       </Routes>
+      <HelpAssistant />
     </Router>
   );
 }
