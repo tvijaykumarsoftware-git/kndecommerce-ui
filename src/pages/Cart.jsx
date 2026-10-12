@@ -5,7 +5,7 @@ import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'http://localhost:5107/api';
+const API_URL = 'https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net/api';
 
 const Cart = () => {
   const navigate = useNavigate();
