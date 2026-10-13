@@ -22,7 +22,7 @@ const UserHeader = () => {
   const userName = displayName;
   const userRole = localStorage.getItem('role') || 'Guest';
   const imageUrl = profileImage;
-  const imageSource = imageUrl && !imageUrl.startsWith('http') ? `http://localhost:5107${imageUrl}` : imageUrl;
+  const imageSource = imageUrl && !imageUrl.startsWith('http') ? `https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net${imageUrl}` : imageUrl;
   const initials = userName.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
   const [imageFailed, setImageFailed] = useState(false);
 
