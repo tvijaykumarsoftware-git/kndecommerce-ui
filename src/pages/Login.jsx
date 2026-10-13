@@ -24,6 +24,9 @@ const Login = () => {
         password: form.password
       });
 
+      // Debug log to verify what the server returned
+      console.log('SERVER LOGIN RESPONSE:', data);
+
       if (!data?.token) throw new Error('The login response did not include a token.');
 
       localStorage.setItem('token', data.token);
@@ -33,6 +36,9 @@ const Login = () => {
       else localStorage.removeItem('imageUrl');
       localStorage.setItem('role', data.role);
       localStorage.setItem('tokenExpiration', data.expiration);
+
+      // Debug log to verify what role was stored
+      console.log('SAVED ROLE IN LOCALSTORAGE:', localStorage.getItem('role'));
 
       // Unique session tab identifier
       const currentTabSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -47,6 +53,7 @@ const Login = () => {
 
       navigate(data.role === 'Admin' ? '/admin/dashboard' : '/catalog');
     } catch (requestError) {
+      console.error('Login error details:', requestError);
       const responseData = requestError.response?.data;
       const serverMessage = typeof responseData === 'string'
         ? responseData
@@ -66,10 +73,26 @@ const Login = () => {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" autoComplete="email" value={form.email} onChange={handleChange} required />
+          <input 
+            id="email" 
+            name="email" 
+            type="email" 
+            autoComplete="email" 
+            value={form.email} 
+            onChange={handleChange} 
+            required 
+          />
 
           <label htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" autoComplete="current-password" value={form.password} onChange={handleChange} required />
+          <input 
+            id="password" 
+            name="password" 
+            type="password" 
+            autoComplete="current-password" 
+            value={form.password} 
+            onChange={handleChange} 
+            required 
+          />
 
           {error && <p className="auth-error" role="alert">{error}</p>}
           <button className="auth-submit" type="submit" disabled={isSubmitting}>

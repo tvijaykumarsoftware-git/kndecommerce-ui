@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net/api',
+  baseURL: 'http://localhost:5107/api', // Point to your local running .NET API
 });
 
 API.interceptors.request.use((config) => {
@@ -11,15 +11,5 @@ API.interceptors.request.use((config) => {
   }
   return config;
 }, (error) => Promise.reject(error));
-
-API.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      console.warn('Unauthorized request - Token may be invalid or expired.');
-    }
-    return Promise.reject(error);
-  }
-);
 
 export default API;
