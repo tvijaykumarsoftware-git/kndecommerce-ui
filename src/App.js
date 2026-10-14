@@ -21,6 +21,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import HelpAssistant from './components/HelpAssistant';
 import './App.css';
 
+const appInsights = require('applicationinsights');
+appInsights.setup('InstrumentationKey=519027f1-92d5-4fff-979c-4efa4279ebf2;IngestionEndpoint=https://westus3-1.in.applicationinsights.azure.com/;LiveEndpoint=https://westus3.livediagnostics.monitor.azure.com/;ApplicationId=9a5261b1-2e76-48ee-935f-6cccbc1e9e8f')
+    .setAutoCollectConsole(true, true)
+    .setAutoCollectExceptions(true)
+    .setAutoCollectRequests(true)
+    .start();
+
 function App() {
   return (
     <Router>
