@@ -4,11 +4,11 @@
   "private": true,
   "proxy": "https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net",
   "dependencies": {
+    "@microsoft/applicationinsights-web": "^3.4.5",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
-    "applicationinsights": "^3.17.0",
     "axios": "^1.20.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
