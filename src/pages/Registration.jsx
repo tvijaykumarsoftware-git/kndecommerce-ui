@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import '../App.css';
 
-const API_URL = 'https://ecommerceportalapi-f2cccjhqgng9fag6.westus3-01.azurewebsites.net/api/auth';
+const API_URL = 'https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net/api/auth';
 
 const Registration = () => {
   const navigate = useNavigate();
