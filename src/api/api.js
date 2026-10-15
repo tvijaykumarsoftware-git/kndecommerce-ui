@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net/api',
+  baseURL: 'http://localhost:5107/api',
 });
 
 API.interceptors.request.use((config) => {
