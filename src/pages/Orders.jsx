@@ -32,6 +32,11 @@ const getStatusBadgeStyle = (status) => {
       backgroundColor = '#dcfce7'; // Soft Green
       color = '#166534';
       break;
+    case 'cancelled':
+    case 'canceled':
+      backgroundColor = '#fee2e2'; // Light Red / Soft Crimson
+      color = '#991b1b';
+      break;
     default:
       break;
   }
@@ -178,7 +183,7 @@ const Orders = () => {
                   <span style={getStatusBadgeStyle(order.orderStatus)}>
                     {order.orderStatus}
                   </span>
-                  <span style={{ fontWeight: '500' }}>· ${Number(order.totalAmount).toFixed(2)}</span>
+                  <span style={{ fontWeight: '500' }}>· \${Number(order.totalAmount).toFixed(2)}</span>
                 </div>
 
                 {/* Rated Star Display */}
@@ -228,7 +233,7 @@ const Orders = () => {
           <div className="modal-content" style={modalContentStyle}>
             <h3 style={{ marginTop: 0 }}>Update Order #{selectedOrder?.orderId} Status</h3>
             <div style={{ margin: '15px 0' }}>
-              {['Pending', 'Processing', 'Shipped', 'Delivered'].map((status) => (
+              {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => (
                 <label key={status} style={{ display: 'flex', alignItems: 'center', margin: '10px 0', cursor: 'pointer' }}>
                   <input
                     type="radio"
@@ -237,7 +242,14 @@ const Orders = () => {
                     checked={selectedStatus === status}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                   />
-                  <span style={{ marginLeft: '10px', fontSize: '15px' }}>{status}</span>
+                  <span style={{ 
+                    marginLeft: '10px', 
+                    fontSize: '15px', 
+                    color: status === 'Cancelled' ? '#991b1b' : 'inherit',
+                    fontWeight: status === 'Cancelled' ? '600' : 'normal'
+                  }}>
+                    {status}
+                  </span>
                 </label>
               ))}
             </div>

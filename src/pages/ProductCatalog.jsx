@@ -6,7 +6,6 @@ import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
 const API_URL = 'https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net/api';
-
 const ProductCatalog = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);

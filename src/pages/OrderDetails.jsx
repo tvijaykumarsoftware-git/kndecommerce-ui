@@ -47,29 +47,107 @@ const OrderDetails = () => {
     }
   };
 
+  const isCancelled = order ? ['cancelled', 'canceled'].includes(String(order.orderStatus).toLowerCase()) : false;
   const activeStep = order ? TRACKING_STEPS.findIndex((step) => step.toLowerCase() === String(order.orderStatus).toLowerCase()) : -1;
 
   return (
     <main className="shop-page narrow-page">
       <UserHeader />
-      <section className="page-heading"><p className="auth-kicker">Order tracking</p><h1>{order ? `Order #${order.orderId}` : 'Order details'}</h1></section>
+      <section className="page-heading">
+        <p className="auth-kicker">Order tracking</p>
+        <h1>{order ? `Order #${order.orderId}` : 'Order details'}</h1>
+      </section>
+
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
+
       {order && <>
         <section className="tracking-panel" aria-label="Order tracking status">
-          <div className="section-heading-row"><div><p className="auth-kicker">Current status</p><h2 className={getStatusClass(order.orderStatus)}>{order.orderStatus}</h2></div><span>{new Date(order.createdAt).toLocaleDateString()}</span></div>
-          <ol className="tracking-steps">
-            {TRACKING_STEPS.map((step, index) => <li className={index <= activeStep ? 'is-complete' : ''} key={step}><span>{index + 1}</span><strong>{step}</strong></li>)}
+          <div className="section-heading-row">
+            <div>
+              <p className="auth-kicker">Current status</p>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span className={getStatusClass(order.orderStatus)}>{order.orderStatus}</span>
+                {isCancelled && (
+                  <span style={{ 
+                    backgroundColor: '#fee2e2', 
+                    color: '#991b1b', 
+                    padding: '2px 10px', 
+                    borderRadius: '12px', 
+                    fontSize: '13px', 
+                    fontWeight: '600' 
+                  }}>
+                    Cancelled
+                  </span>
+                )}
+              </h2>
+            </div>
+            <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+          </div>
+
+          {/* Tracking Steps with Arrow Connectors */}
+          <ol className="tracking-steps" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {TRACKING_STEPS.map((step, index) => {
+              const isComplete = !isCancelled && index <= activeStep;
+              return (
+                <React.Fragment key={step}>
+                  <li className={isComplete ? 'is-complete' : ''} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{index + 1}</span>
+                    <strong>{step}</strong>
+                  </li>
+                  {index < TRACKING_STEPS.length - 1 && (
+                    <span style={{ color: '#9ca3af', fontWeight: 'bold', fontSize: '16px', margin: '0 4px' }} aria-hidden="true">
+                      →
+                    </span>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </ol>
         </section>
+
         <div className="order-detail-layout">
-          <section className="order-detail-section"><div className="section-heading-row"><h2>Items</h2><span>{order.orderItems.length} item{order.orderItems.length === 1 ? '' : 's'}</span></div>
-            <div className="order-items">{order.orderItems.map((item) => <div className="order-item-row" key={item.orderItemId}><div><strong>{item.productName}</strong><span>{item.quantity} x ${Number(item.unitPrice).toFixed(2)}</span></div><strong>${Number(item.lineTotal).toFixed(2)}</strong></div>)}</div>
-            <div className="review-total"><span>Total</span><strong>${Number(order.totalAmount).toFixed(2)}</strong></div>
+          <section className="order-detail-section">
+            <div className="section-heading-row">
+              <h2>Items</h2>
+              <span>{order.orderItems.length} item{order.orderItems.length === 1 ? '' : 's'}</span>
+            </div>
+            <div className="order-items">
+              {order.orderItems.map((item) => (
+                <div className="order-item-row" key={item.orderItemId}>
+                  <div>
+                    <strong>{item.productName}</strong>
+                    <span>{item.quantity} x \${Number(item.unitPrice).toFixed(2)}</span>
+                  </div>
+                  <strong>\${Number(item.lineTotal).toFixed(2)}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="review-total">
+              <span>Total</span>
+              <strong>\${Number(order.totalAmount).toFixed(2)}</strong>
+            </div>
           </section>
-          <aside className="order-detail-aside"><div><h2>Delivery</h2><p>{order.shippingAddress}</p></div><div><h2>Payment</h2><p>{order.transactions[0]?.status || 'Pending'}{order.transactions[0]?.transactionReference ? ` · ${order.transactions[0].transactionReference}` : ''}</p></div>{order.invoices.length > 0 && <button className="summary-action" type="button" disabled={isDownloading} onClick={downloadInvoice}>{isDownloading ? 'Preparing...' : 'Download invoice'}</button>}</aside>
+
+          <aside className="order-detail-aside">
+            <div>
+              <h2>Delivery</h2>
+              <p>{order.shippingAddress}</p>
+            </div>
+            <div>
+              <h2>Payment</h2>
+              <p>{order.transactions[0]?.status || 'Pending'}{order.transactions[0]?.transactionReference ? ` · ${order.transactions[0].transactionReference}` : ''}</p>
+            </div>
+            {order.invoices.length > 0 && (
+              <button className="summary-action" type="button" disabled={isDownloading} onClick={downloadInvoice}>
+                {isDownloading ? 'Preparing...' : 'Download invoice'}
+              </button>
+            )}
+          </aside>
         </div>
+
         <Link className="text-link order-back-link" to="/orders">Back to orders</Link>
       </>}
+
       {!order && !error && <p className="empty-state">Loading order details...</p>}
       <SiteFooter />
     </main>

@@ -46,7 +46,11 @@ const Checkout = () => {
         vendorName: paymentDetails.vendorName || null,
         cardNumber: paymentDetails.cardNumber || null,
         cardExp: paymentDetails.cardExp || null,
-        cardCvv: paymentDetails.cardCvv || null
+        cardCvv: paymentDetails.cardCvv || null,
+        // ✅ Added missing EMI fields to match your C# CreateOrderRequest DTO
+        emiTenure: paymentDetails.emiTenure ? Number(paymentDetails.emiTenure) : null,
+        emiAmount: paymentDetails.emiAmount ? Number(paymentDetails.emiAmount) : null,
+        emiDateOn: paymentDetails.emiDateOn || null
       };
 
       const { data } = await axios.post(`${API_URL}/orders`, payload, {
@@ -113,7 +117,7 @@ const Checkout = () => {
             {items.map((item) => (
               <p key={item.cartItemId}>
                 <span>{item.productName} x {item.quantity}</span>
-                <strong>${(Number(item.price) * item.quantity).toFixed(2)}</strong>
+                <strong>\${(Number(item.price) * item.quantity).toFixed(2)}</strong>
               </p>
             ))}
 
@@ -124,7 +128,7 @@ const Checkout = () => {
 
             <div className="review-total">
               <span>Total</span>
-              <strong>${total.toFixed(2)}</strong>
+              <strong>\${total.toFixed(2)}</strong>
             </div>
           </aside>
         </div>
