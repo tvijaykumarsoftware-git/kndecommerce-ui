@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:5107/api';
+const API_URL = 'https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net/api';
 const moreMenuItems = [
   { label: 'Notification Preferences', to: '/notification-preferences' },
   { label: '24x7 Customer Care', to: '/customer-care' },
@@ -22,7 +22,7 @@ const UserHeader = () => {
   const userName = displayName;
   const userRole = localStorage.getItem('role') || 'Guest';
   const imageUrl = profileImage;
-  const imageSource = imageUrl && !imageUrl.startsWith('http') ? `http://localhost:5107${imageUrl}` : imageUrl;
+  const imageSource = imageUrl && !imageUrl.startsWith('http') ? `https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net${imageUrl}` : imageUrl;
   const initials = userName.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
   const [imageFailed, setImageFailed] = useState(false);
 
