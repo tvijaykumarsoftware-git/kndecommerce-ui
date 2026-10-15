@@ -183,7 +183,7 @@ const Orders = () => {
                   <span style={getStatusBadgeStyle(order.orderStatus)}>
                     {order.orderStatus}
                   </span>
-                  <span style={{ fontWeight: '500' }}>· \${Number(order.totalAmount).toFixed(2)}</span>
+                  <span style={{ fontWeight: '500' }}>· ${Number(order.totalAmount).toFixed(2)}</span>
                 </div>
 
                 {/* Rated Star Display */}

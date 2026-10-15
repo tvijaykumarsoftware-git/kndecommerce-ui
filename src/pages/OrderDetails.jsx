@@ -116,15 +116,15 @@ const OrderDetails = () => {
                 <div className="order-item-row" key={item.orderItemId}>
                   <div>
                     <strong>{item.productName}</strong>
-                    <span>{item.quantity} x \${Number(item.unitPrice).toFixed(2)}</span>
+                    <span>{item.quantity} x ${Number(item.unitPrice).toFixed(2)}</span>
                   </div>
-                  <strong>\${Number(item.lineTotal).toFixed(2)}</strong>
+                  <strong>${Number(item.lineTotal).toFixed(2)}</strong>
                 </div>
               ))}
             </div>
             <div className="review-total">
               <span>Total</span>
-              <strong>\${Number(order.totalAmount).toFixed(2)}</strong>
+              <strong>${Number(order.totalAmount).toFixed(2)}</strong>
             </div>
           </section>
 
