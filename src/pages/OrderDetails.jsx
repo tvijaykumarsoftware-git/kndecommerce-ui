@@ -5,10 +5,24 @@ import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net/api';
-const TRACKING_STEPS = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+const API_URL = 'http://localhost:5107/api';
 
-const getStatusClass = (status) => `order-status status-${String(status || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+// Step definition with individual color coding
+const ALL_STEPS = [
+  { key: 'pending', label: 'Pending', color: '#f59e0b', bg: '#fef3c7' },
+  { key: 'processing', label: 'Processing', color: '#3b82f6', bg: '#dbeafe' },
+  { key: 'shipped', label: 'Shipped', color: '#8b5cf6', bg: '#ede9fe' },
+  { key: 'cancelled', label: 'Cancelled', color: '#ef4444', bg: '#fee2e2' },
+  { key: 'delivered', label: 'Delivered', color: '#10b981', bg: '#d1fae5' },
+];
+
+const getStatusStyle = (status) => {
+  const matched = ALL_STEPS.find(s => s.key === String(status || '').toLowerCase());
+  if (matched) {
+    return { color: matched.color, backgroundColor: matched.bg, padding: '4px 12px', borderRadius: '12px', fontWeight: '600' };
+  }
+  return { color: '#6b7280', backgroundColor: '#f3f4f6', padding: '4px 12px', borderRadius: '12px', fontWeight: '600' };
+};
 
 const OrderDetails = () => {
   const navigate = useNavigate();
@@ -47,8 +61,15 @@ const OrderDetails = () => {
     }
   };
 
-  const isCancelled = order ? ['cancelled', 'canceled'].includes(String(order.orderStatus).toLowerCase()) : false;
-  const activeStep = order ? TRACKING_STEPS.findIndex((step) => step.toLowerCase() === String(order.orderStatus).toLowerCase()) : -1;
+  const currentStatus = String(order?.orderStatus || '').toLowerCase();
+  const isCancelled = ['cancelled', 'canceled'].includes(currentStatus);
+
+  // If not cancelled, exclude 'Cancelled' from the flow entirely
+  const activeStepsList = isCancelled 
+    ? ALL_STEPS 
+    : ALL_STEPS.filter(step => step.key !== 'cancelled');
+
+  const activeIndex = activeStepsList.findIndex(s => s.key === currentStatus);
 
   return (
     <main className="shop-page narrow-page">
@@ -65,37 +86,54 @@ const OrderDetails = () => {
           <div className="section-heading-row">
             <div>
               <p className="auth-kicker">Current status</p>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <span className={getStatusClass(order.orderStatus)}>{order.orderStatus}</span>
-                {isCancelled && (
-                  <span style={{ 
-                    backgroundColor: '#fee2e2', 
-                    color: '#991b1b', 
-                    padding: '2px 10px', 
-                    borderRadius: '12px', 
-                    fontSize: '13px', 
-                    fontWeight: '600' 
-                  }}>
-                    Cancelled
-                  </span>
-                )}
+              <h2>
+                <span style={getStatusStyle(order.orderStatus)}>{order.orderStatus}</span>
               </h2>
             </div>
             <span>{new Date(order.createdAt).toLocaleDateString()}</span>
           </div>
 
-          {/* Tracking Steps with Arrow Connectors */}
-          <ol className="tracking-steps" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            {TRACKING_STEPS.map((step, index) => {
-              const isComplete = !isCancelled && index <= activeStep;
+          {/* Expanded Color-Coded Tracking Steps with Larger Arrows */}
+          <ol className="tracking-steps" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'nowrap', marginTop: '24px', width: '100%', padding: 0, listStyle: 'none' }}>
+            {activeStepsList.map((step, index) => {
+              const isPassed = activeIndex !== -1 && index <= activeIndex;
+              
+              const circleBg = isPassed ? step.color : '#e5e7eb';
+              const circleTextColor = isPassed ? '#ffffff' : '#6b7280';
+              const labelColor = isPassed ? step.color : '#9ca3af';
+
               return (
-                <React.Fragment key={step}>
-                  <li className={isComplete ? 'is-complete' : ''} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>{index + 1}</span>
-                    <strong>{step}</strong>
+                <React.Fragment key={step.key}>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', justifyContent: 'center' }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      backgroundColor: circleBg,
+                      color: circleTextColor,
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      flexShrink: 0,
+                      transition: 'all 0.3s'
+                    }}>
+                      {index + 1}
+                    </span>
+                    <strong style={{ color: labelColor, fontSize: '14px', whiteSpace: 'nowrap', transition: 'color 0.3s' }}>
+                      {step.label}
+                    </strong>
                   </li>
-                  {index < TRACKING_STEPS.length - 1 && (
-                    <span style={{ color: '#9ca3af', fontWeight: 'bold', fontSize: '16px', margin: '0 4px' }} aria-hidden="true">
+                  {index < activeStepsList.length - 1 && (
+                    <span style={{ 
+                      color: index < activeIndex ? step.color : '#d1d5db', 
+                      fontWeight: 'bold', 
+                      fontSize: '24px', // Increased arrow size here
+                      margin: '0 12px', 
+                      flexShrink: 0,
+                      lineHeight: '1'
+                    }} aria-hidden="true">
                       →
                     </span>
                   )}

@@ -5,7 +5,7 @@ import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net/api';
+const API_URL = 'http://localhost:5107/api';
 const ITEMS_PER_PAGE = 8;
 
 // Dynamic status color badge configuration
