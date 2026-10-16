@@ -91,7 +91,7 @@ const UserHeader = () => {
         if (data.imageUrl) localStorage.setItem('imageUrl', data.imageUrl);
         else localStorage.removeItem('imageUrl');
       } catch {
-        // Keep the cached header profile available when the API is temporarily unavailable.
+        // Keep cached profile if network error occurs
       }
     };
 
@@ -117,7 +117,6 @@ const UserHeader = () => {
   }, [isSignedIn]);
 
   const recalculateUniqueUsers = () => {
-    // Collect all active unique emails to deduplicate logins by same user
     const uniqueEmails = new Set(Array.from(activeSessionsRef.current.values()));
     setUniqueUserCount(Math.max(1, uniqueEmails.size));
   };
@@ -156,29 +155,84 @@ const UserHeader = () => {
 
   return (
     <header className="shop-nav">
-      <Link className="brand" to="/catalog" onClick={closeMenu}>
-        <span className="brand-mark" aria-hidden="true">K@</span>
-        <span className="brand-copy"><strong>K@DeCOMMERCE</strong><small>Business marketplace</small></span>
+      {/* Modern Luxury KD Logo & Name */}
+      <Link 
+        className="brand" 
+        to="/catalog" 
+        onClick={closeMenu} 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '12px', 
+          textDecoration: 'none' 
+        }}
+      >
+        <span 
+          className="brand-mark" 
+          aria-hidden="true" 
+          style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center',
+            filter: 'drop-shadow(0px 2px 4px rgba(27, 59, 54, 0.25))'
+          }}
+        >
+          <svg width="42" height="42" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="kdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#1b3b36" />
+                <stop offset="100%" stopColor="#0d1f1c" />
+              </linearGradient>
+              <linearGradient id="kdAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#34d399" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+            </defs>
+
+            {/* Container Shape */}
+            <rect width="44" height="44" rx="12" fill="url(#kdGrad)" />
+
+            {/* Stylized Geometric 'K' */}
+            <path d="M12 11V33M12 22L21 11M12 22L21 33" stroke="#FFFFFF" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
+
+            {/* Interlocking 'D' */}
+            <path d="M24 11H29C33.4183 11 37 14.5817 37 19V25C37 29.4183 33.4183 33 29 33H24V11Z" stroke="url(#kdAccent)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
+
+        <span className="brand-copy" style={{ display: 'flex', flexDirection: 'column' }}>
+          <strong style={{ fontSize: '17px', fontWeight: '800', letterSpacing: '0.8px', color: '#1b3b36', lineHeight: '1.1' }}>
+            KD<span style={{ color: '#059669', fontWeight: '500' }}>COMMERCE</span>
+          </strong>
+          <small style={{ fontSize: '10px', letterSpacing: '1.2px', textTransform: 'uppercase', color: '#6b7280', fontWeight: '600', marginTop: '3px' }}>
+            Business Marketplace
+          </small>
+        </span>
       </Link>
+
       <button className="menu-toggle" type="button" aria-expanded={isMenuOpen} aria-controls="main-menu" onClick={() => setIsMenuOpen((open) => !open)}>
         <span className="menu-icon" aria-hidden="true"><span /><span /><span /></span>
         <span className="menu-label">Menu</span>
       </button>
+
       <nav id="main-menu" className={`shop-nav-links${isMenuOpen ? ' is-open' : ''}`} aria-label="Main menu">
         {isAdmin && <Link to="/admin/dashboard" onClick={closeMenu}>Dashboard</Link>}
         <Link to="/catalog" onClick={closeMenu}>Catalog</Link>
-        {isAdmin ? <div className={`nav-menu${isManageOpen ? ' is-open' : ''}`}>
-          <button type="button" className="nav-menu-trigger" aria-expanded={isManageOpen} aria-haspopup="true" onClick={() => setIsManageOpen((open) => !open)}>
-            Manage <span aria-hidden="true">&#x25BE;</span>
-          </button>
-          <div className="nav-submenu">
-            <Link to="/products" onClick={closeMenu}>Products</Link>
-            <Link to="/categories" onClick={closeMenu}>Categories</Link>
-            <Link to="/orders" onClick={closeMenu}>Orders</Link>
-            <Link to="/admin/transactions" onClick={closeMenu}>Transactions</Link>
-            <Link to="/admin/invoices" onClick={closeMenu}>Invoices</Link>
+        {isAdmin ? (
+          <div className={`nav-menu${isManageOpen ? ' is-open' : ''}`}>
+            <button type="button" className="nav-menu-trigger" aria-expanded={isManageOpen} aria-haspopup="true" onClick={() => setIsManageOpen((open) => !open)}>
+              Manage <span aria-hidden="true">&#x25BE;</span>
+            </button>
+            <div className="nav-submenu">
+              <Link to="/products" onClick={closeMenu}>Products</Link>
+              <Link to="/categories" onClick={closeMenu}>Categories</Link>
+              <Link to="/orders" onClick={closeMenu}>Orders</Link>
+              <Link to="/admin/transactions" onClick={closeMenu}>Transactions</Link>
+              <Link to="/admin/invoices" onClick={closeMenu}>Invoices</Link>
+            </div>
           </div>
-        </div> : isSignedIn && <Link to="/orders" onClick={closeMenu}>Orders</Link>}
+        ) : (
+          isSignedIn && <Link to="/orders" onClick={closeMenu}>Orders</Link>
+        )}
         <Link to="/about" onClick={closeMenu}>About</Link>
         <Link to="/contact" onClick={closeMenu}>Contact</Link>
         <div className={`nav-menu${isMoreOpen ? ' is-open' : ''}`}>
@@ -186,53 +240,113 @@ const UserHeader = () => {
             More <span aria-hidden="true">&#x25BE;</span>
           </button>
           <div className="nav-submenu">
-            {moreMenuItems.map((item) => <Link key={item.label} to={item.to} onClick={closeMenu}>{item.label}</Link>)}
+            {moreMenuItems.map((item) => (
+              <Link key={item.label} to={item.to} onClick={closeMenu}>{item.label}</Link>
+            ))}
           </div>
         </div>
-        {isSignedIn && <Link className="cart-nav-link" to="/cart" onClick={closeMenu} aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}>
-          <svg className="cart-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H6" /><circle cx="9" cy="20" r="1.2" /><circle cx="18" cy="20" r="1.2" /></svg>
-          <span>Cart</span><span className="cart-count" aria-hidden="true">{cartCount > 99 ? '99+' : cartCount}</span>
-        </Link>}
-        {isSignedIn ? <>
-          <span className="user-profile" title={`${userName} - ${userRole}`}>
-            <Link className="user-avatar-link" to="/profile" onClick={closeMenu} aria-label="Edit profile">
-              <span className="user-avatar">{imageSource && !imageFailed ? <img src={imageSource} alt="" onError={() => setImageFailed(true)} /> : initials}</span>
-            </Link>
-            <span><strong>{userName}</strong><small>{userRole}</small></span>
-          </span>
 
-          {/* Active Logged Users Count Tag (Placed between Profile and Sign out) */}
-          <span 
-            className="active-users-tag" 
-            title={`${uniqueUserCount} active logged in user(s)`}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: '#e0e7ff',
-              color: '#1e40af',
-              fontSize: '12px',
-              fontWeight: '600',
-              padding: '4px 10px',
-              borderRadius: '16px',
-              border: '1px solid #c7d2fe',
-              whiteSpace: 'nowrap'
-            }}
-          >
+        {isSignedIn && (
+          <Link className="cart-nav-link" to="/cart" onClick={closeMenu} aria-label={`Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}>
+            <svg className="cart-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H6" />
+              <circle cx="9" cy="20" r="1.2" />
+              <circle cx="18" cy="20" r="1.2" />
+            </svg>
+            <span>Cart</span>
+            <span className="cart-count" aria-hidden="true">{cartCount > 99 ? '99+' : cartCount}</span>
+          </Link>
+        )}
+
+        {isSignedIn ? (
+          <>
+            <span className="user-profile" title={`${userName}\n${userRole}`}>
+              <Link className="user-avatar-link" to="/profile" onClick={closeMenu} aria-label="Edit profile">
+                <span className="user-avatar">
+                  {imageSource && !imageFailed ? (
+                    <img src={imageSource} alt="" onError={() => setImageFailed(true)} />
+                  ) : (
+                    initials
+                  )}
+                </span>
+              </Link>
+              <span>
+                <strong>{userName}</strong>
+                <small>{userRole}</small>
+              </span>
+            </span>
+
+            {/* Active Logged Users Count Badge */}
             <span 
+              className="active-users-tag" 
+              title={`${uniqueUserCount} active logged in user(s)`}
               style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#10b981',
-                display: 'inline-block'
-              }} 
-            />
-            {uniqueUserCount} Active
-          </span>
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#e0e7ff',
+                color: '#1e40af',
+                fontSize: '12px',
+                fontWeight: '600',
+                padding: '4px 10px',
+                borderRadius: '16px',
+                border: '1px solid #c7d2fe',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span 
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#10b981',
+                  display: 'inline-block'
+                }} 
+              />
+              {uniqueUserCount} Active
+            </span>
 
-          <button className="sign-out-button" type="button" onClick={signOut}>Sign out</button>
-        </> : <Link className="nav-cta" to="/login" onClick={closeMenu}>Sign in</Link>}
+            {/* Sign Out SVG Icon Button */}
+            <button 
+              className="sign-out-button" 
+              type="button" 
+              onClick={signOut}
+              title="Sign out"
+              aria-label="Sign out"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px 8px',
+                borderRadius: '6px',
+                color: '#ef4444',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fee2e2')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </>
+        ) : (
+          <Link className="nav-cta" to="/login" onClick={closeMenu}>Sign in</Link>
+        )}
       </nav>
     </header>
   );

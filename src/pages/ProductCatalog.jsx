@@ -20,6 +20,7 @@ const ProductCatalog = () => {
 
   // Modal & Zoom States
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [zoomedCardId, setZoomedCardId] = useState(null);
   const [isModalZoomed, setIsModalZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
@@ -102,14 +103,11 @@ const ProductCatalog = () => {
       setMessage(data.message || 'Product added to cart.');
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (requestError) {
-      console.error('Add to cart error response:', requestError.response || requestError);
-      
       if (requestError.response?.status === 401) {
         localStorage.removeItem('token');
         navigate('/login');
         return;
       }
-
       setError(requestError.response?.data?.message || 'Unable to add this product to your cart.');
     } finally {
       setAddingProductId(null);
@@ -135,6 +133,7 @@ const ProductCatalog = () => {
 
   const openProductModal = (product) => {
     setSelectedProduct(product);
+    setActiveImageIndex(0);
     setIsModalZoomed(false);
     setZoomPos({ x: 50, y: 50 });
   };
@@ -144,34 +143,47 @@ const ProductCatalog = () => {
     setIsModalZoomed(false);
   };
 
-  const hasSpecifications = (specs) => {
-    if (!specs) return false;
-    if (typeof specs === 'object') return Object.keys(specs).length > 0;
-    return String(specs).trim().length > 0;
-  };
-
-  // Helper function to extract price fields reliably regardless of API casing
   const getProductPricing = (product) => {
     const rawPrice = Number(product.price || 0);
-    const rawDiscount = 
-      product.discountOnMRP ?? 
-      product.discountOnMrp ?? 
-      product.discountOnMrpPrice ?? 
-      product.discountedPrice ?? 
-      product.discountPrice ?? 
-      null;
-
+    const rawDiscount = product.discountOnMRP ?? null;
     const discountVal = rawDiscount !== null && rawDiscount !== undefined ? Number(rawDiscount) : null;
-    
-    // Determine if discount is active and valid
     const hasDiscount = discountVal !== null && !isNaN(discountVal) && discountVal > 0 && discountVal < rawPrice;
     
     const discountedPrice = hasDiscount ? discountVal : rawPrice;
     const mrp = rawPrice;
-    const savings = mrp - discountedPrice;
-    const discountPercent = hasDiscount ? Math.round((savings / mrp) * 100) : 0;
+    const discountPercent = hasDiscount ? Math.round(((mrp - discountedPrice) / mrp) * 100) : 0;
 
-    return { mrp, discountedPrice, savings, discountPercent, hasDiscount };
+    return { mrp, discountedPrice, discountPercent, hasDiscount };
+  };
+
+  const renderPaginationNav = () => {
+    if (error || totalPages <= 1) return null;
+    return (
+      <nav className="catalog-pagination" aria-label="Product catalog pagination">
+        <button type="button" className="pagination-arrow" onClick={() => goToPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
+          Previous
+        </button>
+
+        {Array.from({ length: totalPages }, (_, index) => {
+          const pageNumber = index + 1;
+          return (
+            <button
+              key={pageNumber}
+              type="button"
+              className={pageNumber === safeCurrentPage ? 'pagination-page is-active' : 'pagination-page'}
+              onClick={() => goToPage(pageNumber)}
+              aria-current={pageNumber === safeCurrentPage ? 'page' : undefined}
+            >
+              {pageNumber}
+            </button>
+          );
+        })}
+
+        <button type="button" className="pagination-arrow" onClick={() => goToPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
+          Next
+        </button>
+      </nav>
+    );
   };
 
   return (
@@ -180,7 +192,7 @@ const ProductCatalog = () => {
 
       <section className="page-heading">
         <p className="auth-kicker">The collection</p>
-        <h1>Find something<br />worth keeping.</h1>
+        <h1 style={{ whiteSpace: 'nowrap' }}>Find something worth keeping.</h1>
         <p>Thoughtful goods for everyday spaces and rituals.</p>
       </section>
 
@@ -206,23 +218,26 @@ const ProductCatalog = () => {
         </div>
       </section>
 
-      <section className="product-grid" aria-label="Product catalog">
+      <section className="product-grid" aria-label="Product catalog metadata">
         {message && <p className="shop-message" role="status">{message} <Link to="/cart">View cart</Link></p>}
         {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
 
         {!error && !isLoading && products.length > 0 && (
-          <div className="catalog-results-meta" aria-live="polite">
+          <div className="catalog-results-meta" aria-live="polite" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', width: '100%' }}>
             <span>Showing {Math.min(startIndex + 1, products.length)}-{Math.min(startIndex + productsPerPage, products.length)} of {products.length} products</span>
             <span>Page {safeCurrentPage} of {totalPages}</span>
           </div>
         )}
       </section>
 
+      {renderPaginationNav()}
+
       <section className="product-grid" aria-label="Product catalog">
         {visibleProducts.map((product) => {
           const inStock = product.stockQuantity > 0;
           const isZoomed = zoomedCardId === product.productId;
-          const { mrp, discountedPrice, savings, discountPercent, hasDiscount } = getProductPricing(product);
+          const { mrp, discountedPrice, discountPercent, hasDiscount } = getProductPricing(product);
+          const displayImg = product.imageUrl || product.backImageUrl || product.leftImageUrl || product.rightImageUrl;
 
           return (
             <article className="product-card" key={product.productId}>
@@ -240,9 +255,9 @@ const ProductCatalog = () => {
                 onMouseMove={isZoomed ? handleMouseMove : undefined}
                 onClick={() => openProductModal(product)}
               >
-                {product.imageUrl ? (
+                {displayImg ? (
                   <img 
-                    src={product.imageUrl} 
+                    src={displayImg} 
                     alt={product.name} 
                     style={{
                       width: '100%',
@@ -291,7 +306,6 @@ const ProductCatalog = () => {
                 </div>
 
                 <div style={{ marginTop: '12px' }}>
-                  {/* Flipkart Style Price Display */}
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '18px', fontWeight: '700', color: '#212121', fontFamily: 'Roboto, Arial, sans-serif' }}>
                       ₹{discountedPrice.toLocaleString('en-IN')}
@@ -309,23 +323,6 @@ const ProductCatalog = () => {
                       </span>
                     )}
                   </div>
-
-                  {/* Flipkart Style Green Savings Tag */}
-                  {hasDiscount && savings > 0 && (
-                    <div style={{ marginTop: '4px' }}>
-                      <span style={{
-                        display: 'inline-block',
-                        backgroundColor: '#e6f4ea',
-                        color: '#137333',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        padding: '2px 6px',
-                        borderRadius: '3px'
-                      }}>
-                        Save ₹{savings.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="product-purchase" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
@@ -344,11 +341,7 @@ const ProductCatalog = () => {
 
                   <button
                     type="button"
-                    style={{
-                      padding: '6px 16px',
-                      fontSize: '12px',
-                      fontWeight: '600'
-                    }}
+                    style={{ padding: '6px 16px', fontSize: '12px', fontWeight: '600' }}
                     disabled={!inStock || addingProductId === product.productId}
                     onClick={() => addToCart(product.productId)}
                   >
@@ -361,140 +354,154 @@ const ProductCatalog = () => {
         })}
       </section>
 
-      {!error && totalPages > 1 && (
-        <nav className="catalog-pagination" aria-label="Product catalog pagination">
-          <button type="button" className="pagination-arrow" onClick={() => goToPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
-            Previous
-          </button>
-
-          {Array.from({ length: totalPages }, (_, index) => {
-            const pageNumber = index + 1;
-            return (
-              <button
-                key={pageNumber}
-                type="button"
-                className={pageNumber === safeCurrentPage ? 'pagination-page is-active' : 'pagination-page'}
-                onClick={() => goToPage(pageNumber)}
-                aria-current={pageNumber === safeCurrentPage ? 'page' : undefined}
-              >
-                {pageNumber}
-              </button>
-            );
-          })}
-
-          <button type="button" className="pagination-arrow" onClick={() => goToPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
-            Next
-          </button>
-        </nav>
-      )}
+      {renderPaginationNav()}
 
       {!error && isLoading && <p className="empty-state">Loading the collection...</p>}
       {!error && !isLoading && products.length === 0 && <p className="empty-state">No products match your search.</p>}
 
       {/* Product Detail Modal */}
       {selectedProduct && (() => {
-        const { mrp: modalMrp, discountedPrice: modalDiscountedPrice, discountPercent: modalDiscountPercent, hasDiscount: modalHasDiscount } = getProductPricing(selectedProduct);
+        const { mrp: modalMrp, discountedPrice: modalDiscountedPrice, hasDiscount: modalHasDiscount } = getProductPricing(selectedProduct);
+
+        const productImages = [
+          selectedProduct.imageUrl,
+          selectedProduct.backImageUrl,
+          selectedProduct.leftImageUrl,
+          selectedProduct.rightImageUrl
+        ].filter(Boolean);
+
+        const activeImg = productImages[activeImageIndex] || productImages[0];
+
+        const handleNextImage = (e) => {
+          e.stopPropagation();
+          setActiveImageIndex((prev) => (prev + 1) % productImages.length);
+        };
+
+        const handlePrevImage = (e) => {
+          e.stopPropagation();
+          setActiveImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+        };
 
         return (
           <div 
             style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
+              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
               backgroundColor: 'rgba(0, 0, 0, 0.75)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
             }}
             onClick={closeModal}
           >
             <div 
               style={{
-                backgroundColor: '#ffffff',
-                padding: '28px',
-                borderRadius: '12px',
-                maxWidth: '780px',
-                width: '90%',
-                maxHeight: '85vh',
-                overflowY: 'auto',
-                position: 'relative',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+                backgroundColor: '#ffffff', padding: '28px', borderRadius: '12px',
+                maxWidth: '820px', width: '90%', maxHeight: '85vh', overflowY: 'auto',
+                position: 'relative', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
               <button 
                 type="button" 
                 onClick={closeModal} 
-                style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#6b7280' }}
+                style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#6b7280', zIndex: 10 }}
               >
                 ✕
               </button>
 
               <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-                {/* Modal Image Box */}
-                <div 
-                  style={{ 
-                    flex: '1 1 300px', 
-                    position: 'relative', 
-                    overflow: 'hidden', 
-                    height: '320px', 
-                    backgroundColor: '#f9fafb', 
-                    borderRadius: '8px' 
-                  }}
-                  onMouseMove={isModalZoomed ? handleMouseMove : undefined}
-                >
-                  {selectedProduct.imageUrl ? (
-                    <img 
-                      src={selectedProduct.imageUrl} 
-                      alt={selectedProduct.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                        transform: isModalZoomed ? 'scale(2.2)' : 'scale(1)',
-                        transition: isModalZoomed ? 'transform 0.05s linear' : 'transform 0.25s ease'
-                      }}
-                    />
-                  ) : (
-                    <span>{selectedProduct.name}</span>
-                  )}
-                  
-                  <button
-                    type="button"
-                    onClick={() => setIsModalZoomed(!isModalZoomed)}
-                    style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      right: '12px',
-                      background: '#ffffff',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                
+                <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div 
+                    style={{ 
+                      position: 'relative', overflow: 'hidden', height: '320px', 
+                      backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}
+                    onMouseMove={isModalZoomed ? handleMouseMove : undefined}
                   >
-                    {isModalZoomed ? 'Zoom Out -' : 'Zoom In +'}
-                  </button>
+                    {activeImg ? (
+                      <img 
+                        src={activeImg} 
+                        alt={selectedProduct.name}
+                        style={{
+                          width: '100%', height: '100%', objectFit: 'contain',
+                          transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                          transform: isModalZoomed ? 'scale(2.2)' : 'scale(1)',
+                          transition: isModalZoomed ? 'transform 0.05s linear' : 'transform 0.25s ease'
+                        }}
+                      />
+                    ) : (
+                      <span>{selectedProduct.name}</span>
+                    )}
+
+                    {productImages.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handlePrevImage}
+                          style={{
+                            position: 'absolute', left: '10px', top: 'calc(50% - 16px)',
+                            background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
+                            borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', zIndex: 5
+                          }}
+                        >
+                          ‹
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleNextImage}
+                          style={{
+                            position: 'absolute', right: '10px', top: 'calc(50% - 16px)',
+                            background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
+                            borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', zIndex: 5
+                          }}
+                        >
+                          ›
+                        </button>
+                      </>
+                    )}
+                    
+                    <button
+                      type="button"
+                      onClick={() => setIsModalZoomed(!isModalZoomed)}
+                      style={{
+                        position: 'absolute', bottom: '12px', right: '12px',
+                        background: '#ffffff', border: '1px solid #d1d5db', borderRadius: '6px',
+                        padding: '6px 12px', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      {isModalZoomed ? 'Zoom Out -' : 'Zoom In +'}
+                    </button>
+                  </div>
+
+                  {/* Image Counter Indicator Dots */}
+                  {productImages.length > 1 && (
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                      {productImages.map((_, idx) => (
+                        <span
+                          key={idx}
+                          onClick={() => setActiveImageIndex(idx)}
+                          style={{
+                            width: activeImageIndex === idx ? '20px' : '8px',
+                            height: '8px',
+                            borderRadius: '4px',
+                            backgroundColor: activeImageIndex === idx ? '#1b3b36' : '#cbd5e1',
+                            cursor: 'pointer',
+                            transition: 'width 0.2s ease, background-color 0.2s ease'
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Modal Details */}
                 <div style={{ flex: '1 1 300px' }}>
                   <h3 
                     style={{ 
-                      fontSize: '16px', 
-                      margin: '0 0 16px 0', 
-                      textTransform: 'uppercase', 
-                      letterSpacing: '0.05em', 
-                      color: '#374151',
-                      borderBottom: '2px solid #e5e7eb',
-                      paddingBottom: '6px'
+                      fontSize: '16px', margin: '0 0 16px 0', textTransform: 'uppercase', 
+                      letterSpacing: '0.05em', color: '#374151', borderBottom: '2px solid #e5e7eb', paddingBottom: '6px' 
                     }}
                   >
                     Specifications
@@ -509,69 +516,25 @@ const ProductCatalog = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
                       <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Price:</span>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: '700', color: '#212121', fontSize: '18px' }}>
-                          ₹{modalDiscountedPrice.toLocaleString('en-IN')}
-                        </span>
-                        {modalHasDiscount && (
-                          <span style={{ textDecoration: 'line-through', color: '#878787', fontSize: '14px' }}>
-                            ₹{modalMrp.toLocaleString('en-IN')}
-                          </span>
-                        )}
-                        {modalHasDiscount && modalDiscountPercent > 0 && (
-                          <span style={{ color: '#388e3c', fontSize: '13px', fontWeight: '700' }}>
-                            {modalDiscountPercent}% off
-                          </span>
-                        )}
+                        <span style={{ fontWeight: '700', color: '#212121', fontSize: '18px' }}>₹{modalDiscountedPrice.toLocaleString('en-IN')}</span>
+                        {modalHasDiscount && <span style={{ textDecoration: 'line-through', color: '#878787', fontSize: '14px' }}>₹{modalMrp.toLocaleString('en-IN')}</span>}
                       </div>
                     </div>
 
-                    {selectedProduct.platformFee && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
-                        <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Platform Fee:</span>
-                        <span style={{ fontWeight: '600', color: '#374151', fontSize: '14px' }}>₹{Number(selectedProduct.platformFee).toFixed(2)}</span>
-                      </div>
-                    )}
-
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
                       <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px', minWidth: '80px' }}>Model:</span>
-                      <span style={{ fontWeight: '500', color: '#374151', fontSize: '14px', textAlign: 'right' }}>
-                        {selectedProduct.description || selectedProduct.name}
-                      </span>
+                      <span style={{ fontWeight: '500', color: '#374151', fontSize: '14px', textAlign: 'right' }}>{selectedProduct.description || selectedProduct.name}</span>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px' }}>
                       <span style={{ fontWeight: '600', color: '#6b7280', fontSize: '14px' }}>Stock:</span>
-                      <span
-                        style={{
-                          backgroundColor: selectedProduct.stockQuantity > 0 ? '#10b981' : '#ef4444',
-                          color: '#ffffff',
-                          padding: '4px 10px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: '600'
-                        }}
-                      >
+                      <span style={{ backgroundColor: selectedProduct.stockQuantity > 0 ? '#10b981' : '#ef4444', color: '#ffffff', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
                         {selectedProduct.stockQuantity > 0 ? `In Stock: ${selectedProduct.stockQuantity}` : 'Out of Stock'}
                       </span>
                     </div>
-
-                    {hasSpecifications(selectedProduct.specifications) && (
-                      <div style={{ marginTop: '12px', background: '#f9fafb', padding: '12px', borderRadius: '6px', fontSize: '13px' }}>
-                        {typeof selectedProduct.specifications === 'object' ? (
-                          <ul style={{ paddingLeft: '16px', margin: 0 }}>
-                            {Object.entries(selectedProduct.specifications).map(([key, val]) => (
-                              <li key={key} style={{ marginBottom: '4px' }}>
-                                <strong>{key}:</strong> {val}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p style={{ margin: 0, color: '#4b5563' }}>{selectedProduct.specifications}</p>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
+
               </div>
             </div>
           </div>
