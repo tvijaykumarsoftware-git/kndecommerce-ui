@@ -94,16 +94,15 @@ const CategoryPage = () => {
   return (
     <main className="shop-page narrow-page admin-page">
       <UserHeader />
-      <section className="page-heading">
-        <p className="auth-kicker">Catalog</p>
-        <h1>Categories</h1>
+      <br></br>
+      <section>
+        <p className="auth-kicker">Catalog || Categories || Category manager</p>
       </section>
       {message && <p className="shop-message" role="status">{message}</p>}
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
 
       <section className="admin-section">
         <div className="admin-section-heading">
-          <h2>Category manager</h2>
           <span>{categories.length} items</span>
         </div>
 

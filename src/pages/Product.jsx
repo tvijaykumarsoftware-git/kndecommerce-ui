@@ -157,16 +157,14 @@ const ProductPage = () => {
   return (
     <main className="shop-page narrow-page admin-page">
       <UserHeader />
-      <section className="page-heading">
-        <p className="auth-kicker">Catalog</p>
-        <h1>Products</h1>
+      <br></br>
+      <section>
+        <p className="auth-kicker">Catalog || Products || Product manager</p>
       </section>
       {message && <p className="shop-message" role="status">{message}</p>}
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
-
       <section className="admin-section">
         <div className="admin-section-heading">
-          <h2>Product manager</h2>
           <span>{products.length} items</span>
         </div>
 
@@ -199,7 +197,7 @@ const ProductPage = () => {
               {categories.filter((category) => category.isActive).map((category) => (
                 <option key={category.categoryId} value={category.categoryId}>{category.name}</option>
               ))}
-            </select>
+            </select><br></br>
 
             <input style={{ flex: '1', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="imageUrl" placeholder="Front Image URL" value={form.imageUrl} onChange={updateForm} />
             <input style={{ flex: '1', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="backImageUrl" placeholder="Back Image URL" value={form.backImageUrl} onChange={updateForm} />

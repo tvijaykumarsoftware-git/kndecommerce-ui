@@ -65,7 +65,8 @@ const Profile = () => {
   return (
     <main className="shop-page narrow-page admin-page">
       <UserHeader />
-      <section className="page-heading"><p className="auth-kicker">Account</p><h1>Edit profile</h1></section>
+      <br></br>
+      <section><p className="auth-kicker">Account</p><h1>Edit profile</h1></section>
       {message && <p className="shop-message" role="status">{message}</p>}
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
       <section className="profile-layout">

@@ -189,10 +189,10 @@ const ProductCatalog = () => {
   return (
     <main className="shop-page catalog-page">
       <UserHeader />
-
-      <section className="page-heading">
+<br></br>
+      <section>
         <p className="auth-kicker">The collection</p>
-        <h1 style={{ whiteSpace: 'nowrap' }}>Find something worth keeping.</h1>
+        <h2 style={{ whiteSpace: 'nowrap' }}>Find something worth keeping.</h2>
         <p>Thoughtful goods for everyday spaces and rituals.</p>
       </section>
 

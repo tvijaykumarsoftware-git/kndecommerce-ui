@@ -24,9 +24,10 @@ const studioPhotos = [
 const About = () => (
   <main className="shop-page narrow-page info-page about-page">
     <UserHeader />
-    <section className="page-heading">
-      <p className="auth-kicker">About KN Commerce</p>
-      <h1>Useful things,<br />chosen carefully.</h1>
+    <br></br>
+    <section>
+      <p className="auth-kicker">About K&D eCommerce</p>
+      <h2>Useful things,<br />chosen carefully.</h2>
     </section>
 
     <section className="info-layout about-story">

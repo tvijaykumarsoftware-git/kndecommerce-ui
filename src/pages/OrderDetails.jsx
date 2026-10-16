@@ -74,7 +74,8 @@ const OrderDetails = () => {
   return (
     <main className="shop-page narrow-page">
       <UserHeader />
-      <section className="page-heading">
+      <br></br>
+      <section>
         <p className="auth-kicker">Order tracking</p>
         <h1>{order ? `Order #${order.orderId}` : 'Order details'}</h1>
       </section>

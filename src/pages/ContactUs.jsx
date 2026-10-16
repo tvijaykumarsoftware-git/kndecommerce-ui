@@ -15,9 +15,10 @@ const ContactUs = () => {
   return (
     <main className="shop-page narrow-page info-page contact-page">
       <UserHeader />
-      <section className="page-heading">
+      <br></br>
+      <section>
         <p className="auth-kicker">Contact us</p>
-        <h1>Let’s talk<br />things through.</h1>
+        <h2>Let’s talk<br />things through.</h2>
       </section>
       <section className="contact-layout">
         <div>

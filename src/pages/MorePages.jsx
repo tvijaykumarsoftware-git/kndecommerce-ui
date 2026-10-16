@@ -55,7 +55,8 @@ const MorePage = ({ type }) => {
   return (
     <main className="shop-page narrow-page info-page more-page">
       <UserHeader />
-      <section className="page-heading">
+      <br></br>
+      <section>
         <p className="auth-kicker">{content.kicker}</p>
         <h1 dangerouslySetInnerHTML={{ __html: content.title }} />
         <p className="more-page-intro">{content.intro}</p>
