@@ -28,7 +28,8 @@ const Transactions = () => {
   return (
     <main className="shop-page narrow-page admin-page">
       <UserHeader />
-      <section className="page-heading"><p className="auth-kicker">Payments</p><h1>Transactions</h1></section>
+      <br></br>
+      <section><p className="auth-kicker">Payments || Transactions</p></section>
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
       <section className="data-grid" aria-label="Transactions list">
         <div className="data-grid-header"><span>Reference</span><span>Order</span><span>Provider</span><span>Amount</span><span>Status</span><span>Processed</span></div>

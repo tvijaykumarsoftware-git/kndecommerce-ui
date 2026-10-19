@@ -158,9 +158,9 @@ const Orders = () => {
   return (
     <main className="shop-page narrow-page">
       <UserHeader />
-      <section className="page-heading">
-        <p className="auth-kicker">Your purchases</p>
-        <h1>Orders</h1>
+      <br></br>
+      <section>
+        <p className="auth-kicker">Your purchases || Orders</p>
       </section>
 
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}

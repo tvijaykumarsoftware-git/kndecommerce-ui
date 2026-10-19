@@ -85,10 +85,9 @@ const Checkout = () => {
   return (
     <main className="shop-page narrow-page checkout-page">
       <UserHeader />
-      <section className="page-heading">
-        <p className="auth-kicker">Almost yours</p>
-        <h1>Checkout</h1>
-      </section>
+      <section>
+        <p className="auth-kicker">Almost yours || Checkout</p>
+          </section>
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
       {items.length === 0 ? (
         <div className="empty-state">

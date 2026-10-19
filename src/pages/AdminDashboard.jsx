@@ -67,9 +67,9 @@ const AdminDashboard = () => {
   return (
     <main className="shop-page narrow-page admin-page">
       <UserHeader />
-      <section className="page-heading">
-        <p className="auth-kicker">Overview</p>
-        <h1>Store management</h1>
+      <br></br>
+      <section>
+        <p className="auth-kicker">Overview Dashboard</p><h2>Store management</h2>
       </section>
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
 

@@ -50,7 +50,8 @@ const Invoices = () => {
   return (
     <main className="shop-page narrow-page admin-page">
       <UserHeader />
-      <section className="page-heading"><p className="auth-kicker">Order records</p><h1>Invoices</h1></section>
+      <br></br>
+      <section><p className="auth-kicker">Order records || Invoices</p></section>
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
       <section className="invoice-grid" aria-label="Invoices list">
         {visibleInvoices.map((invoice) => <article className="invoice-card" key={invoice.invoiceId}><div><strong>{invoice.invoiceNumber}</strong><span>Order #{invoice.orderId} · {new Date(invoice.invoiceDate).toLocaleDateString()}</span><span>{invoice.Order?.orderStatus || invoice.order?.orderStatus} · ${Number(invoice.Order?.totalAmount ?? invoice.order?.totalAmount ?? 0).toFixed(2)}</span></div><button className="summary-action" type="button" disabled={downloadingId === invoice.orderId} onClick={() => downloadPdf(invoice.orderId)}>{downloadingId === invoice.orderId ? 'Preparing...' : 'Download PDF'}</button></article>)}

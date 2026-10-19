@@ -49,7 +49,8 @@ const Cart = () => {
   return (
     <main className="shop-page narrow-page cart-page">
       <UserHeader />
-      <section className="page-heading"><p className="auth-kicker">Your selection</p><h1>Shopping cart</h1></section>
+      <br></br>
+      <section><p className="auth-kicker">Your selection || Shopping cart</p></section>
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
       {items.length === 0 ? <div className="empty-state"><p>Your cart is empty.</p><Link className="text-link" to="/catalog">Explore the collection</Link></div> : (
         <>

@@ -24,10 +24,10 @@ const Login = () => {
         password: form.password
       });
 
-      // Debug log to verify what the server returned
-      console.log('SERVER LOGIN RESPONSE:', data);
-
-      if (!data?.token) throw new Error('The login response did not include a token.');
+      if (!data?.token) {
+        setError('The sign-in service returned an invalid response. Please try again later.');
+        return;
+      }
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.userName);
@@ -36,9 +36,6 @@ const Login = () => {
       else localStorage.removeItem('imageUrl');
       localStorage.setItem('role', data.role);
       localStorage.setItem('tokenExpiration', data.expiration);
-
-      // Debug log to verify what role was stored
-      console.log('SAVED ROLE IN LOCALSTORAGE:', localStorage.getItem('role'));
 
       // Unique session tab identifier
       const currentTabSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -53,12 +50,26 @@ const Login = () => {
 
       navigate(data.role === 'Admin' ? '/admin/dashboard' : '/catalog');
     } catch (requestError) {
-      console.error('Login error details:', requestError);
       const responseData = requestError.response?.data;
       const serverMessage = typeof responseData === 'string'
         ? responseData
-        : responseData?.message || responseData?.error || responseData?.title;
-      setError(serverMessage || 'Unable to sign in. Please check your details.');
+        : [
+          responseData?.message,
+          responseData?.error,
+          responseData?.detail,
+          responseData?.title
+        ].find((message) => typeof message === 'string' && message.trim());
+      if (serverMessage) {
+        setError(serverMessage);
+      } else if (requestError.response?.status === 401) {
+        setError('The email or password is incorrect, or the account is inactive.');
+      } else if (requestError.response?.status >= 500) {
+        setError('The sign-in service is temporarily unavailable. Please try again later.');
+      } else if (requestError.request) {
+        setError('Unable to reach the sign-in service. Check your connection and try again.');
+      } else {
+        setError('Unable to sign in. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -174,13 +174,12 @@ const ProductPage = () => {
   return (
     <main className="shop-page narrow-page admin-page">
       <UserHeader />
-      <section className="page-heading">
-        <p className="auth-kicker">Catalog</p>
-        <h1>Products</h1>
+      <br></br>
+      <section>
+        <p className="auth-kicker">Catalog || Products || Product manager</p>
       </section>
       {message && <p className="shop-message" role="status">{message}</p>}
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
-
       <section className="admin-section">
         <div className="admin-section-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
@@ -195,6 +194,53 @@ const ProductPage = () => {
           >
             + Add Product
           </button>
+        <div className="admin-section-heading">
+          <span>{products.length} items</span>
+        </div>
+
+        {/* Horizontal Scrolling Single-Line Form Layout */}
+        <div style={{ overflowX: 'auto', paddingBottom: '12px' }}>
+          <form 
+            className="admin-form" 
+            onSubmit={saveProduct}
+            style={{ 
+              display: 'flex', 
+              flexWrap: 'nowrap', 
+              gap: '8px', 
+              alignItems: 'center', 
+              minWidth: '1500px',
+              background: '#f8fafc',
+              padding: '16px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0'
+            }}
+          >
+            <input style={{ flex: '1.2', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="name" placeholder="Product name *" value={form.name} onChange={updateForm} required />
+            <input style={{ flex: '1.2', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="description" placeholder="Description" value={form.description} onChange={updateForm} />
+            <input style={{ flex: '0.8', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="price" type="number" min="0" step="0.01" placeholder="MRP Price *" value={form.price} onChange={updateForm} required />
+            <input style={{ flex: '0.8', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="discountOnMRP" type="number" min="0" step="0.01" placeholder="Discount Price" value={form.discountOnMRP} onChange={updateForm} />
+            <input style={{ flex: '0.8', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="platformFee" type="number" min="0" step="0.01" placeholder="Platform Fee" value={form.platformFee} onChange={updateForm} />
+            <input style={{ flex: '0.6', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="stockQuantity" type="number" min="0" placeholder="Stock *" value={form.stockQuantity} onChange={updateForm} required />
+            
+            <select style={{ flex: '1', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }} name="categoryId" value={form.categoryId} onChange={updateForm} required>
+              <option value="">Category *</option>
+              {categories.filter((category) => category.isActive).map((category) => (
+                <option key={category.categoryId} value={category.categoryId}>{category.name}</option>
+              ))}
+            </select><br></br>
+
+            <input style={{ flex: '1', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="imageUrl" placeholder="Front Image URL" value={form.imageUrl} onChange={updateForm} />
+            <input style={{ flex: '1', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="backImageUrl" placeholder="Back Image URL" value={form.backImageUrl} onChange={updateForm} />
+            <input style={{ flex: '1', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="leftImageUrl" placeholder="Left Image URL" value={form.leftImageUrl} onChange={updateForm} />
+            <input style={{ flex: '1', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e1' }} name="rightImageUrl" placeholder="Right Image URL" value={form.rightImageUrl} onChange={updateForm} />
+            
+            <button className="summary-action" type="submit" style={{ flex: 'none', padding: '8px 16px', background: '#1b3b36', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>
+              {editingProductId ? 'Update' : 'Add product'}
+            </button>
+            {editingProductId && (
+              <button type="button" className="text-button" onClick={cancelEdit} style={{ flex: 'none', padding: '8px 12px', background: '#e2e8f0', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+            )}
+          </form>
         </div>
 
         {/* Modal Popup Form */}
