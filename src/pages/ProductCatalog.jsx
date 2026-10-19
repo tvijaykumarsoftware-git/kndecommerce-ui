@@ -6,6 +6,7 @@ import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
 const API_URL = 'http://localhost:5107/api';
+
 const ProductCatalog = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -189,10 +190,10 @@ const ProductCatalog = () => {
   return (
     <main className="shop-page catalog-page">
       <UserHeader />
-<br></br>
-      <section>
+
+      <section className="page-heading">
         <p className="auth-kicker">The collection</p>
-        <h2 style={{ whiteSpace: 'nowrap' }}>Find something worth keeping.</h2>
+        <h1 style={{ whiteSpace: 'nowrap' }}>Find something worth keeping.</h1>
         <p>Thoughtful goods for everyday spaces and rituals.</p>
       </section>
 
@@ -237,7 +238,12 @@ const ProductCatalog = () => {
           const inStock = product.stockQuantity > 0;
           const isZoomed = zoomedCardId === product.productId;
           const { mrp, discountedPrice, discountPercent, hasDiscount } = getProductPricing(product);
-          const displayImg = product.imageUrl || product.backImageUrl || product.leftImageUrl || product.rightImageUrl;
+          
+          // Extract images from the dynamic ProductImages table relationship, fallback to main ImageUrl
+          const productImages = product.productImages && product.productImages.length > 0 
+            ? product.productImages.map(img => img.imageUrl) 
+            : [product.imageUrl].filter(Boolean);
+          const displayImg = productImages[0];
 
           return (
             <article className="product-card" key={product.productId}>
@@ -363,12 +369,9 @@ const ProductCatalog = () => {
       {selectedProduct && (() => {
         const { mrp: modalMrp, discountedPrice: modalDiscountedPrice, hasDiscount: modalHasDiscount } = getProductPricing(selectedProduct);
 
-        const productImages = [
-          selectedProduct.imageUrl,
-          selectedProduct.backImageUrl,
-          selectedProduct.leftImageUrl,
-          selectedProduct.rightImageUrl
-        ].filter(Boolean);
+        const productImages = selectedProduct.productImages && selectedProduct.productImages.length > 0 
+          ? selectedProduct.productImages.map(img => img.imageUrl) 
+          : [selectedProduct.imageUrl].filter(Boolean);
 
         const activeImg = productImages[activeImageIndex] || productImages[0];
 
@@ -476,20 +479,24 @@ const ProductCatalog = () => {
                     </button>
                   </div>
 
-                  {/* Image Counter Indicator Dots */}
+                  {/* Image Counter Indicator Dots / Thumbnails */}
                   {productImages.length > 1 && (
-                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
-                      {productImages.map((_, idx) => (
-                        <span
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {productImages.map((imgUrl, idx) => (
+                        <img
                           key={idx}
+                          src={imgUrl}
+                          alt={`Thumbnail ${idx + 1}`}
                           onClick={() => setActiveImageIndex(idx)}
                           style={{
-                            width: activeImageIndex === idx ? '20px' : '8px',
-                            height: '8px',
+                            width: '45px',
+                            height: '45px',
+                            objectFit: 'cover',
                             borderRadius: '4px',
-                            backgroundColor: activeImageIndex === idx ? '#1b3b36' : '#cbd5e1',
+                            border: activeImageIndex === idx ? '2px solid #1b3b36' : '1px solid #cbd5e1',
                             cursor: 'pointer',
-                            transition: 'width 0.2s ease, background-color 0.2s ease'
+                            opacity: activeImageIndex === idx ? 1 : 0.6,
+                            transition: 'all 0.2s ease'
                           }}
                         />
                       ))}
