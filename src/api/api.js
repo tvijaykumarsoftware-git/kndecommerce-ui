@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5107/api',
+  baseURL: 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api',
 });
 
 API.interceptors.request.use((config) => {
