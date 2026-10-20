@@ -5,7 +5,7 @@ import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'http://localhost:5107/api';
+const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const emptyProfile = { firstName: '', lastName: '', email: '', phoneNumber: '', location: '', image: null };
 
 const Profile = () => {
