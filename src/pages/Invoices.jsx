@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import API from '../api/api';
 import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const ITEMS_PER_PAGE = 8;
 
 const Invoices = () => {
@@ -14,7 +13,7 @@ const Invoices = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    axios.get(`${API_URL}/invoices`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    API.get('/invoices', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       .then(({ data }) => setInvoices(data))
       .catch((requestError) => setError(requestError.response?.data?.message || 'Unable to load invoices.'));
   }, []);
@@ -23,7 +22,7 @@ const Invoices = () => {
     setDownloadingId(orderId);
     setError('');
     try {
-      const response = await axios.get(`${API_URL}/invoices/generate/${orderId}`, {
+      const response = await API.get(`/invoices/generate/${orderId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         responseType: 'blob'
       });

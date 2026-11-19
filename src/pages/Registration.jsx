@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/api';
 import '../App.css';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const Registration = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', phoneNumber: '', location: '', image: null });
@@ -31,7 +30,7 @@ const Registration = () => {
       Object.entries({ ...form, roleId: 2 }).forEach(([key, value]) => {
         if (value !== null && value !== '') payload.append(key, value);
       });
-      await axios.post(`${API_URL}/register`, payload);
+      await API.post('/register', payload);
       navigate('/login', { state: { message: 'Account created. Please sign in.' } });
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Unable to create your account. Please try again.');

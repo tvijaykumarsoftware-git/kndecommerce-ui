@@ -1,7 +1,16 @@
 import axios from 'axios';
+import appSettings from '../appsettings.json';
+
+export const API_BASE_URL = appSettings.ApiUrls[appSettings.BackendType];
+
+if (!API_BASE_URL) {
+  throw new Error(`Unsupported BackendType "${appSettings.BackendType}". Use "local" or "azure".`);
+}
+
+export const API_ORIGIN = new URL(API_BASE_URL).origin;
 
 const API = axios.create({
-  baseURL: 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api',
+  baseURL: API_BASE_URL,
 });
 
 API.interceptors.request.use((config) => {

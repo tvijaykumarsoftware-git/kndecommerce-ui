@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import API from '../api/api';
 import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
-
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 
 // Step definition with individual color coding
 const ALL_STEPS = [
@@ -32,7 +30,7 @@ const OrderDetails = () => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API_URL}/orders/${encodeURIComponent(orderId)}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    API.get(`/orders/${encodeURIComponent(orderId)}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       .then(({ data }) => setOrder({ ...data, orderItems: data.orderItems || [], transactions: data.transactions || [], invoices: data.invoices || [] }))
       .catch((requestError) => {
         if (requestError.response?.status === 401) navigate('/login');
@@ -44,7 +42,7 @@ const OrderDetails = () => {
     setIsDownloading(true);
     setError('');
     try {
-      const response = await axios.get(`${API_URL}/invoices/generate/${orderId}`, {
+      const response = await API.get(`/invoices/generate/${orderId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         responseType: 'blob'
       });
