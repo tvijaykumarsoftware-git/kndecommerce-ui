@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import API from '../api/api';
 import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const ITEMS_PER_PAGE = 8;
 
 const Transactions = () => {
@@ -13,7 +12,7 @@ const Transactions = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    axios.get(`${API_URL}/transactions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    API.get('/transactions', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       .then(({ data }) => setTransactions(data))
       .catch((requestError) => setError(requestError.response?.data?.message || 'Unable to load transactions.'));
   }, []);

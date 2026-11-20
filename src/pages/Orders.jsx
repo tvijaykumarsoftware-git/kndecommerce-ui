@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/api';
 import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const ITEMS_PER_PAGE = 8;
 
 // Dynamic status color badge configuration
@@ -66,7 +65,7 @@ const Orders = () => {
   const [selectedRating, setSelectedRating] = useState(0);
 
   const fetchOrders = useCallback(() => {
-    axios.get(`${API_URL}/orders`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    API.get('/orders', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       .then(({ data }) => setOrders(data))
       .catch((requestError) => {
         if (requestError.response?.status === 401) navigate('/login');
@@ -112,8 +111,8 @@ const Orders = () => {
     setError('');
 
     try {
-      await axios.put(
-        `${API_URL}/orders/${selectedOrder.orderId}/status`,
+      await API.put(
+        `/orders/${selectedOrder.orderId}/status`,
         { orderStatus: selectedStatus },
         { 
           headers: { 
@@ -136,8 +135,8 @@ const Orders = () => {
     setError('');
 
     try {
-      await axios.put(
-        `${API_URL}/orders/${selectedOrder.orderId}/rate`,
+      await API.put(
+        `/orders/${selectedOrder.orderId}/rate`,
         { rating: selectedRating },
         { 
           headers: { 

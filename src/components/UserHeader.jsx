@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import API, { API_ORIGIN } from '../api/api';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const moreMenuItems = [
   { label: 'Notification Preferences', to: '/notification-preferences' },
   { label: '24x7 Customer Care', to: '/customer-care' },
@@ -22,7 +21,7 @@ const UserHeader = () => {
   const userName = displayName;
   const userRole = localStorage.getItem('role') || 'Guest';
   const imageUrl = profileImage;
-  const imageSource = imageUrl && !imageUrl.startsWith('http') ? `https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net${imageUrl}` : imageUrl;
+  const imageSource = imageUrl && !imageUrl.startsWith('http') ? `${API_ORIGIN}${imageUrl}` : imageUrl;
   const initials = userName.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -80,7 +79,7 @@ const UserHeader = () => {
 
     const loadProfile = async () => {
       try {
-        const { data } = await axios.get(`${API_URL}/auth/profile`, {
+        const { data } = await API.get('/auth/profile', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         const name = data.userName || `${data.firstName} ${data.lastName}`.trim();
@@ -97,7 +96,7 @@ const UserHeader = () => {
 
     const loadCartCount = async () => {
       try {
-        const { data } = await axios.get(`${API_URL}/cart`, {
+        const { data } = await API.get('/cart', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setCartCount(data.reduce((total, item) => total + Number(item.quantity || 0), 0));

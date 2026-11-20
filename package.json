@@ -2,7 +2,6 @@
   "name": "kndecommerce-ui",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net",
   "dependencies": {
     "@microsoft/applicationinsights-web": "^3.4.5",
     "@testing-library/dom": "^10.4.1",
@@ -10,11 +9,13 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.20.0",
+    "lucide-react": "^0.468.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
     "react-scripts": "5.0.1",
     "recharts": "^3.10.1",
+    "sweetalert2": "^11.26.25",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

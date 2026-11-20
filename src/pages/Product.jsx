@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import API from '../api/api';
 import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const emptyProduct = { 
   name: '', 
   description: '', 
@@ -15,7 +15,8 @@ const emptyProduct = {
   stockQuantity: 0, 
   categoryId: '', 
   imageUrl: '',
-  images: [''] // Dynamic image URLs list initialized with one empty field
+  isEMI: false, // Added default state for IsEMI
+  images: [''] 
 };
 
 const getApiErrorMessage = (requestError, fallback) => {
@@ -33,7 +34,7 @@ const ProductPage = () => {
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Popup modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,8 +43,8 @@ const ProductPage = () => {
 
   const loadData = async () => {
     const [productsResponse, categoriesResponse] = await Promise.all([
-      axios.get(`${API_URL}/products`),
-      axios.get(`${API_URL}/categories`)
+      API.get('/products'),
+      API.get('/categories')
     ]);
     setProducts(productsResponse.data);
     setCategories(categoriesResponse.data);
@@ -64,10 +65,10 @@ const ProductPage = () => {
   }, [totalPages]);
 
   const updateForm = ({ target }) => {
-    setForm((current) => ({ ...current, [target.name]: target.value }));
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    setForm((current) => ({ ...current, [target.name]: value }));
   };
 
-  // Handlers for dynamic image inputs
   const handleImageChange = (index, value) => {
     const updatedImages = [...form.images];
     updatedImages[index] = value;
@@ -106,14 +107,15 @@ const ProductPage = () => {
       imageUrl: form.imageUrl.trim() || (form.images.length > 0 ? form.images[0].trim() : ''),
       discountOnMRP: form.discountOnMRP !== '' ? Number(form.discountOnMRP) : null,
       platformFee: form.platformFee !== '' ? Number(form.platformFee) : null,
+      isEMI: Boolean(form.isEMI),
       productImages: form.images.filter(img => img.trim() !== '').map(url => ({ imageUrl: url.trim() }))
     };
 
     try {
       if (editingProductId) {
-        await axios.put(`${API_URL}/products/${editingProductId}`, { ...payload, productId: editingProductId }, requestConfig);
+        await API.put(`/products/${editingProductId}`, { ...payload, productId: editingProductId }, requestConfig);
       } else {
-        await axios.post(`${API_URL}/products`, payload, requestConfig);
+        await API.post('/products', payload, requestConfig);
       }
 
       setForm(emptyProduct);
@@ -136,12 +138,13 @@ const ProductPage = () => {
       stockQuantity: product.stockQuantity,
       categoryId: product.categoryId,
       imageUrl: product.imageUrl || '',
+      isEMI: product.isEMI ?? false,
       images: product.productImages && product.productImages.length > 0 
         ? product.productImages.map(img => img.imageUrl) 
         : [product.imageUrl || '']
     });
     setEditingProductId(product.productId);
-    setIsModalOpen(true); // Open modal for editing
+    setIsModalOpen(true);
   };
 
   const openAddModal = () => {
@@ -157,15 +160,27 @@ const ProductPage = () => {
   };
 
   const removeProduct = async (productId) => {
-    if (!window.confirm('Delete this product?')) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you really want to delete this product? This process cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#1b3b36',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (!result.isConfirmed) return;
 
     setError('');
     try {
-      await axios.delete(`${API_URL}/products/${productId}`, requestConfig);
+      await API.delete(`/products/${productId}`, requestConfig);
       setMessage('Product deleted.');
       await loadData();
+      Swal.fire('Deleted!', 'The product has been deleted successfully.', 'success');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Unable to delete this product.');
+      Swal.fire('Error!', 'Unable to delete this product.', 'error');
     }
   };
 
@@ -186,7 +201,6 @@ const ProductPage = () => {
             <h2>Product manager</h2>
             <span>{products.length} items</span>
           </div>
-          {/* Add Product Button in the Corner */}
           <button 
             type="button" 
             onClick={openAddModal}
@@ -195,6 +209,7 @@ const ProductPage = () => {
             + Add Product
           </button>
         </div>
+
         {/* Modal Popup Form */}
         {isModalOpen && (
           <div style={{
@@ -231,7 +246,22 @@ const ProductPage = () => {
                   ))}
                 </select>
 
-                {/* Dynamic Image Input Fields with + Button */}
+                {/* IsEMI Checkbox Field */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 0' }}>
+                  <input 
+                    type="checkbox" 
+                    id="isEMI" 
+                    name="isEMI" 
+                    checked={form.isEMI} 
+                    onChange={updateForm} 
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="isEMI" style={{ cursor: 'pointer', fontWeight: '500', color: '#334155' }}>
+                    Available for EMI / Installments
+                  </label>
+                </div>
+
+                {/* Dynamic Image Input Fields */}
                 <div style={{ border: '1px solid #e2e8f0', padding: '12px', borderRadius: '6px', background: '#f8fafc' }}>
                   <label style={{ fontWeight: '600', display: 'block', marginBottom: '8px' }}>Product Images (Multiple allowed)</label>
                   {form.images.map((imgUrl, index) => (
@@ -253,7 +283,8 @@ const ProductPage = () => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
-                  <button type="button" onClick={cancelEdit} style={{ padding: '10px 16px', background: '#e2e8f0', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                  {/* Cancel button with light red background */}
+                  <button type="button" onClick={cancelEdit} style={{ padding: '10px 16px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
                   <button type="submit" style={{ padding: '10px 16px', background: '#1b3b36', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>
                     {editingProductId ? 'Update Product' : 'Save Product'}
                   </button>
@@ -267,7 +298,14 @@ const ProductPage = () => {
           {visibleProducts.map((product) => (
             <article className="admin-card" key={product.productId}>
               <div>
-                <strong>{product.name}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <strong>{product.name}</strong>
+                  {product.isEMI && (
+                    <span style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '11px', padding: '2px 6px', borderRadius: '4px', fontWeight: '600' }}>
+                      EMI Available
+                    </span>
+                  )}
+                </div>
                 <span>
                   {product.categoryName || 'Uncategorized'} · 
                   {product.discountOnMRP ? (
@@ -282,9 +320,26 @@ const ProductPage = () => {
                   {product.productImages?.length > 0 && ` · ${product.productImages.length} Images`}
                 </span>
               </div>
-              <div className="admin-actions">
-                <button type="button" onClick={() => editProduct(product)}>Edit</button>
-                <button type="button" onClick={() => removeProduct(product.productId)}>Delete</button>
+              {/* Action Icons replacing text buttons */}
+              <div className="admin-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button 
+                  type="button" 
+                  onClick={() => editProduct(product)} 
+                  title="Edit Product"
+                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '4px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#334155' }}
+                >
+                  {/* Edit Icon SVG */}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => removeProduct(product.productId)} 
+                  title="Delete Product"
+                  style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '4px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#991b1b' }}
+                >
+                  {/* Delete Icon SVG */}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
               </div>
             </article>
           ))}

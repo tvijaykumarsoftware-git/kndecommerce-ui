@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import API, { API_ORIGIN } from '../api/api';
 import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const emptyProfile = { firstName: '', lastName: '', email: '', phoneNumber: '', location: '', image: null };
 
 const Profile = () => {
@@ -17,10 +16,12 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API_URL}/profile`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    API.get('/auth/profile')
       .then(({ data }) => {
         setForm({ ...emptyProfile, ...data });
-        if (data.imageUrl) setImagePreview(data.imageUrl.startsWith('http') ? data.imageUrl : `https://ecommerceapi-cicd-e4crb6e4gkgnf3a9.westus3-01.azurewebsites.net${data.imageUrl}`);
+        if (data.imageUrl) {
+          setImagePreview(data.imageUrl.startsWith('http') ? data.imageUrl : `${API_ORIGIN}${data.imageUrl}`);
+        }
       })
       .catch((requestError) => {
         if (requestError.response?.status === 401) navigate('/login');
@@ -46,12 +47,13 @@ const Profile = () => {
       Object.entries(form).forEach(([key, value]) => {
         if (key !== 'email' && value !== null && value !== '') payload.append(key, value);
       });
-      const { data } = await axios.put(`${API_URL}/profile`, payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+
+      const { data } = await API.put('/auth/profile', payload);
+
       localStorage.setItem('userName', data.userName);
       if (data.imageUrl) localStorage.setItem('imageUrl', data.imageUrl);
       else localStorage.removeItem('imageUrl');
+
       window.dispatchEvent(new Event('profileUpdated'));
       setForm((current) => ({ ...current, ...data, image: null }));
       setMessage('Profile updated.');
@@ -70,7 +72,13 @@ const Profile = () => {
       {message && <p className="shop-message" role="status">{message}</p>}
       {error && <p className="auth-error shop-alert" role="alert">{error}</p>}
       <section className="profile-layout">
-        <div className="profile-portrait">{imagePreview ? <img src={imagePreview} alt="Profile preview" /> : <span>{form.firstName?.[0]}{form.lastName?.[0]}</span>}</div>
+        <div className="profile-portrait">
+          {imagePreview ? (
+            <img src={imagePreview} alt="Profile preview" />
+          ) : (
+            <span>{form.firstName?.[0]}{form.lastName?.[0]}</span>
+          )}
+        </div>
         <form className="auth-form profile-form" onSubmit={saveProfile}>
           <div className="auth-name-fields">
             <div><label htmlFor="firstName">First name</label><input id="firstName" name="firstName" value={form.firstName} onChange={handleChange} required /></div>

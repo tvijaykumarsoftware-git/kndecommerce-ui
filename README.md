@@ -14,6 +14,8 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
+Set `BackendType` in `src/appsettings.json` to `local` or `azure` to select the API used by all frontend pages. The local backend URL is `http://localhost:5107/api`; start the backend locally when `BackendType` is `local`.
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\

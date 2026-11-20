@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import API from '../api/api';
 import UserHeader from '../components/UserHeader';
 import SiteFooter from '../components/SiteFooter';
 import '../App.css';
 
-const API_URL = 'https://ecommercestoredevapi-amdjeheceag6eedy.westus3-01.azurewebsites.net/api';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -19,9 +18,9 @@ const AdminDashboard = () => {
       try {
         const requestConfig = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
         const [productsResponse, categoriesResponse, ordersResponse] = await Promise.all([
-          axios.get(`${API_URL}/products`),
-          axios.get(`${API_URL}/categories`),
-          axios.get(`${API_URL}/orders`, requestConfig)
+          API.get('/products'),
+          API.get('/categories'),
+          API.get('/orders', requestConfig)
         ]);
         setProducts(productsResponse.data);
         setCategories(categoriesResponse.data);
