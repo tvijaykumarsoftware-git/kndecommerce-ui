@@ -8,15 +8,16 @@ import '../App.css';
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const paymentProvider = location.state?.paymentProvider || 'Credit / Debit Card';
-  const paymentDetails = location.state?.paymentDetails || {};
+  const paymentProvider = location.state?.paymentProvider || 'Cash on Delivery';
   const [items, setItems] = useState([]);
-  const [shippingAddress, setShippingAddress] = useState('');
+  const [shippingAddress, setShippingAddress] = useState(location.state?.shippingAddress || '');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmation, setConfirmation] = useState(null);
+  const [confirmation, setConfirmation] = useState(location.state?.confirmation || null);
 
   useEffect(() => {
+    if (location.state?.confirmation) return;
+
     API.get('/cart', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
@@ -36,9 +37,15 @@ const Checkout = () => {
         if (requestError.response?.status === 401) navigate('/login');
         else setError(requestError.response?.data?.message || 'Unable to load your cart.');
       });
-  }, [navigate]);
+  }, [location.state, navigate]);
 
-  const total = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity ?? 1), 0);
+  const getItemTotal = (item) => {
+    const price = Number(item.price ?? 0);
+    const discounted = Number(item.discountOnMRP ?? 0);
+    const sellingPrice = discounted > 0 && discounted < price ? discounted : price;
+    return (sellingPrice + Number(item.platformFee ?? 0)) * Number(item.quantity ?? 1);
+  };
+  const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
 
   const placeOrder = async (event) => {
     event.preventDefault();
@@ -48,14 +55,7 @@ const Checkout = () => {
       const payload = {
         shippingAddress,
         paymentProvider,
-        vendorName: paymentDetails.vendorName || null,
-        cardNumber: paymentDetails.cardNumber || null,
-        cardExp: paymentDetails.cardExp || null,
-        cardCvv: paymentDetails.cardCvv || null,
-        emiTenure: paymentDetails.emiTenure ? Number(paymentDetails.emiTenure) : null,
-        emiAmount: paymentDetails.emiAmount ? Number(paymentDetails.emiAmount) : null,
-        emiDateOn: paymentDetails.emiDateOn || null,
-        cartItemIds: items.map((item) => item.cartItemId) // Only pass in-stock item IDs
+        cartItemIds: location.state?.cartItemIds || items.map((item) => item.cartItemId)
       };
       const { data } = await API.post('/orders', payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -118,7 +118,7 @@ const Checkout = () => {
             {items.map((item) => (
               <p key={item.cartItemId}>
                 <span>{item.productName} x {item.quantity ?? 1}</span>
-                <strong>₹{(Number(item.price) * Number(item.quantity ?? 1)).toFixed(2)}</strong>
+                <strong>₹{getItemTotal(item).toFixed(2)}</strong>
               </p>
             ))}
             <div className="review-payment">
