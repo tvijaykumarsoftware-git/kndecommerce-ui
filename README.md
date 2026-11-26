@@ -16,6 +16,15 @@ You may also see any lint errors in the console.
 
 Set `BackendType` in `src/appsettings.json` to `local` or `azure` to select the API used by all frontend pages. The local backend URL is `http://localhost:5107/api`; start the backend locally when `BackendType` is `local`.
 
+For local Razorpay checkout, set backend user-secrets from the `EcommerceAPI` directory:
+
+```powershell
+dotnet user-secrets set "Razorpay:KeyId" "<your Razorpay test key ID>"
+dotnet user-secrets set "Razorpay:KeySecret" "<your Razorpay test key secret>"
+```
+
+Restart the backend after setting them. Production should use the `Razorpay__KeyId` and `Razorpay__KeySecret` environment variables. Never add the key secret to frontend settings or source control.
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
