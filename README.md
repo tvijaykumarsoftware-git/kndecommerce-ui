@@ -25,6 +25,17 @@ dotnet user-secrets set "Razorpay:KeySecret" "<your Razorpay test key secret>"
 
 Restart the backend after setting them. Production should use the `Razorpay__KeyId` and `Razorpay__KeySecret` environment variables. Never add the key secret to frontend settings or source control.
 
+For order confirmation emails, set `SendGrid:Enabled` to `true` in the backend settings and provide a SendGrid API key and verified sender address. The `SendGrid` section is in `EcommerceAPI/appsettings.json`. Do not commit a real API key; use backend user-secrets locally:
+
+```powershell
+dotnet user-secrets set "SendGrid:Enabled" "true"
+dotnet user-secrets set "SendGrid:ApiKey" "<your SendGrid API key>"
+dotnet user-secrets set "SendGrid:FromEmail" "<your verified sender email>"
+dotnet user-secrets set "SendGrid:FromName" "Ecommerce Store"
+```
+
+In production, use `SendGrid__Enabled`, `SendGrid__ApiKey`, `SendGrid__FromEmail`, and optional `SendGrid__FromName` environment variables. Order confirmation email is sent after the order and invoice are saved; an email delivery failure does not undo the order.
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\

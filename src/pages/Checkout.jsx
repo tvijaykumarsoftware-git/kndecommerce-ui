@@ -77,6 +77,8 @@ const Checkout = () => {
           <h1>Thank you for your order.</h1>
           <p className="auth-subtitle">Order #{confirmation.orderId} is being prepared.</p>
           <p>Invoice: <strong>{confirmation.invoiceNumber}</strong></p>
+          {confirmation.emailSent === true && <p role="status">Order details were sent to your registered email.</p>}
+          {confirmation.emailSent === false && <p role="status">Your order is confirmed, but we could not send the confirmation email. {confirmation.emailError || 'Please contact support if needed.'}</p>}
           <p>Payment Method: <strong>{paymentProvider}</strong></p>
           <Link className="auth-submit summary-action" to="/orders">Back to orders</Link>
         </section>
